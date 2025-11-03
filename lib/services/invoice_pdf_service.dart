@@ -6,7 +6,8 @@ import 'package:open_filex/open_filex.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
 
-import '../modules/order_details/order_details_controller.dart';
+import '../models/cutomer_info.dart';
+import '../models/service_item.dart';
 
 class InvoicePdfService {
   /// Generates a 2-page PDF:

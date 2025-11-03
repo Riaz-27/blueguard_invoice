@@ -21,19 +21,19 @@ class TaxChip extends StatelessWidget {
     final textColor = selected ? Colors.white : const Color(0xFF1E3A8A);
 
     return InkWell(
-      borderRadius: BorderRadius.circular(10.r),
+      borderRadius: BorderRadius.circular(50.r),
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: BorderRadius.circular(10.r),
+          borderRadius: BorderRadius.circular(50.r),
           boxShadow: selected
               ? [
                   BoxShadow(
-                    blurRadius: 12.r,
+                    blurRadius: 15.r,
                     offset: const Offset(0, 4),
-                    color: const Color(0xFF2563EB).withOpacity(0.4),
+                    color: const Color(0xFF2563EB).withAlpha(50),
                   ),
                 ]
               : [],

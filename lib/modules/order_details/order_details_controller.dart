@@ -1,90 +1,42 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'dart:math';
 
+import '../../models/cutomer_info.dart';
+import '../../models/service_item.dart';
 import '../../services/invoice_pdf_service.dart';
 import '../../services/submit_order_service.dart';
 
-class ServiceItem {
-  String name;
-  double price;
-  int qty;
-
-  ServiceItem({required this.name, required this.price, required this.qty});
-}
-
-class CustomerInfo {
-  final String firstName;
-  final String lastName;
-  final String street;
-  final String city;
-  final String province;
-  final String postalCode;
-  final String email;
-  final String phone;
-
-  const CustomerInfo({
-    required this.firstName,
-    required this.lastName,
-    required this.street,
-    required this.city,
-    required this.province,
-    required this.postalCode,
-    required this.email,
-    required this.phone,
-  });
-}
-
 class OrderDetailsController extends GetxController {
-  late CustomerInfo customerInfo;
+  late final CustomerInfo customerInfo;
 
   @override
   void onInit() {
     super.onInit();
-    // default fallback so nothing crashes if you navigate directly
-    customerInfo = const CustomerInfo(
-      firstName: "test",
-      lastName: "test",
-      street: "test",
-      city: "Chittagong",
-      province: "Chittagong",
-      postalCode: "123234",
-      email: "riaz.uddin27@gmail.com",
-      phone: "01812345678",
-    );
-  }
 
-  void setCustomerInfoFromMap(Map<String, dynamic> m) {
-    customerInfo = CustomerInfo(
-      firstName: m["firstName"] ?? "",
-      lastName: m["lastName"] ?? "",
-      street: m["street"] ?? "",
-      city: m["city"] ?? "",
-      province: m["province"] ?? "",
-      postalCode: m["postalCode"] ?? "",
-      email: m["email"] ?? "",
-      phone: m["phone"] ?? "",
-    );
+    if (Get.arguments?['customerInfo'] != null) {
+      customerInfo = Get.arguments?['customerInfo'] as CustomerInfo;
+    } else {
+      customerInfo = CustomerInfo(
+        firstName: "",
+        lastName: "",
+        street: "",
+        city: "",
+        province: "",
+        postalCode: "",
+        email: "",
+        phone: "",
+      );
+    }
+
+    nextServiceDateCtrl = TextEditingController(text: "2025-11-05");
+    commentCtrl = TextEditingController();
   }
 
   /// Cart-like services. qty 0 means not taken, qty>0 taken.
-  final RxList<ServiceItem> services = <ServiceItem>[
-    ServiceItem(name: "Air duct cleaning", price: 0, qty: 0),
-    ServiceItem(name: "Air exchanger cleaning", price: 500, qty: 1),
-    ServiceItem(name: "Heat pump cleaning W/split unit", price: 0, qty: 0),
-    ServiceItem(name: "Dryer vent cleaning", price: 0, qty: 0),
-    ServiceItem(name: "Furnace blower cleaning", price: 0, qty: 0),
-    ServiceItem(
-      name: "Power cleaning with sweeper line method",
-      price: 0,
-      qty: 0,
-    ),
-    ServiceItem(name: "Central vacuum cleaning with outlet", price: 0, qty: 0),
-    ServiceItem(name: "Sanitizing with spray bottle", price: 0, qty: 0),
-    ServiceItem(name: "Sanitization with fogger", price: 0, qty: 0),
-    ServiceItem(name: "Additional Services", price: 0, qty: 0),
-  ].obs;
+  final RxList<ServiceItem> services = <ServiceItem>[].obs;
 
   final List<String> serviceOptions = const [
     "Air duct cleaning",
@@ -99,23 +51,16 @@ class OrderDetailsController extends GetxController {
     "Additional Services",
   ];
 
-  final Map<String, double> taxRates = const {
-    "QC": 0.15,
-    "ON": 0.13,
-    "NS": 0.15,
-    "NB": 0.15,
-  };
+  final Map<String, double> taxRates = const {"QC": 0.15, "ON": 0.13};
 
-  final RxString selectedProvince = "QC".obs;
+  final RxString selectedTaxSlab = "QC".obs;
 
-  final nextServiceDateCtrl = TextEditingController(text: "2025-11-05");
-  final commentCtrl = TextEditingController(
-    text: "Heating and cooling system checked. Systems working properly",
-  );
+  late final TextEditingController nextServiceDateCtrl;
+  late final TextEditingController commentCtrl;
 
-  final RxString commentType =
-      "Heating and cooling system checked. Systems working properly".obs;
+  final RxString commentType = "Select a preset".obs;
   final List<String> commentOptions = const [
+    "Select a preset",
     "Heating and cooling system checked. Systems working properly",
     "Recommend filter replacement soon",
     "Customer requested callback",
@@ -133,15 +78,15 @@ class OrderDetailsController extends GetxController {
     for (final s in services) {
       total += s.price * s.qty;
     }
-    return total;
+    return (total * 100).round() / 100;
   }
 
   double get taxPercent {
-    return taxRates[selectedProvince.value] ?? 0.0;
+    return taxRates[selectedTaxSlab.value] ?? 0.0;
   }
 
   double get taxAmount {
-    return subTotal * taxPercent;
+    return ((subTotal * taxPercent) * 100).round() / 100;
   }
 
   double get totalAfterTax {
@@ -166,7 +111,7 @@ class OrderDetailsController extends GetxController {
 
   void decrementQty(int index) {
     if (index < 0 || index >= services.length) return;
-    if (services[index].qty > 0) {
+    if (services[index].qty > 1) {
       services[index].qty -= 1;
       services.refresh();
     }
@@ -179,7 +124,7 @@ class OrderDetailsController extends GetxController {
   }
 
   void selectProvince(String code) {
-    selectedProvince.value = code;
+    selectedTaxSlab.value = code;
   }
 
   Future<void> pickNextServiceDate(BuildContext context) async {
@@ -187,7 +132,7 @@ class OrderDetailsController extends GetxController {
     final picked = await showDatePicker(
       context: context,
       firstDate: now,
-      lastDate: DateTime(now.year + 5),
+      lastDate: DateTime(now.year + 20),
       initialDate: now,
     );
 
@@ -199,7 +144,18 @@ class OrderDetailsController extends GetxController {
     }
   }
 
-  // ---- NEXT: first submit_order.php, then generate PDF ----
+  void updateService({
+    required int index,
+    required String name,
+    required double price,
+    required int qty,
+  }) {
+    final item = services[index];
+    services[index] = item.copyWith(name: name, price: price, qty: qty);
+    services.refresh();
+  }
+
+  // ---- first submit_order, then generate PDF ----
   Future<void> onNext() async {
     if (services.isEmpty) {
       Get.snackbar("No services", "Please add at least one service.");
@@ -208,30 +164,28 @@ class OrderDetailsController extends GetxController {
 
     isSubmitting.value = true;
     try {
-      //TODO COMENTED FOR TESTING NOW
-      // 1. submit order to backend
-      // final apiResult = await _submitOrderService.submitOrder(
-      //   customer: customerInfo,
-      //   services: services.toList(),
-      //   taxPercent: taxPercent,
-      //   totalPrice: totalAfterTax,
-      //   nextServiceDate: nextServiceDateCtrl.text.trim(),
-      //   comments: commentCtrl.text.trim(),
-      // );
+      // submit order to backend
+      final apiResult = await _submitOrderService.submitOrder(
+        customer: customerInfo,
+        services: services.toList(),
+        taxPercent: taxPercent,
+        totalPrice: totalAfterTax,
+        nextServiceDate: nextServiceDateCtrl.text.trim(),
+        comments: commentCtrl.text.trim(),
+      );
 
-      // if (!apiResult.success) {
-      //   Get.snackbar(
-      //     "Order Failed",
-      //     apiResult.message.isEmpty
-      //         ? "Could not save order"
-      //         : apiResult.message,
-      //   );
-      //   isSubmitting.value = false;
-      //   return;
-      // }
+      if (!apiResult.success) {
+        Get.snackbar(
+          "Order Failed",
+          apiResult.message.isEmpty
+              ? "Could not save order"
+              : apiResult.message,
+        );
+        isSubmitting.value = false;
+        return;
+      }
 
-      // 2. Load assets for PDF
-      // NOTE: update paths if different in your assets folder
+      // Load assets for PDF
       final fullPageData = await rootBundle.load('assets/terms.jpg');
       final fullPageImageBytes = fullPageData.buffer.asUint8List();
 
@@ -264,7 +218,7 @@ class OrderDetailsController extends GetxController {
       //       : "Order saved & PDF generated.",
       // );
 
-      // Optional navigation after success
+      // after success
       // Get.offAllNamed(AppRoutes.home);
     } catch (e) {
       Get.snackbar("Error", e.toString());
@@ -274,7 +228,6 @@ class OrderDetailsController extends GetxController {
   }
 
   String _generateInvoiceNumber() {
-    // Just a pseudo-unique invoice number like "25110001"
     final r = Random().nextInt(900000) + 100000;
     final y = DateTime.now().year.toString().substring(2);
     return "$y$r";

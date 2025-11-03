@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../order_details_controller.dart';
+import '../../../models/service_item.dart';
 
 class ServiceRowTile extends StatelessWidget {
   final ServiceItem item;

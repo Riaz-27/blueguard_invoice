@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:invoice/widgets/custom_button.dart';
 import 'tax_chip.dart';
 
 class BottomSummaryBar extends StatelessWidget {
@@ -8,12 +9,15 @@ class BottomSummaryBar extends StatelessWidget {
   final void Function(String code) onSelectProvince;
 
   final double subTotal;
-  final double taxPercent;
+  final double taxPercent; // assume fractional (e.g., 0.075 for 7.5%)
   final double taxAmount;
   final double total;
 
   final VoidCallback? onNext;
   final bool isLoading;
+
+  /// Optional label (defaults to "Generate Invoice")
+  final String primaryLabel;
 
   const BottomSummaryBar({
     super.key,
@@ -26,6 +30,7 @@ class BottomSummaryBar extends StatelessWidget {
     required this.total,
     required this.onNext,
     required this.isLoading,
+    this.primaryLabel = "Generate Invoice",
   });
 
   @override
@@ -39,14 +44,12 @@ class BottomSummaryBar extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(
-          top: BorderSide(color: const Color(0xFFE5E7EB), width: 1),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
         boxShadow: [
           BoxShadow(
-            blurRadius: 20.r,
+            blurRadius: 25.r,
             offset: const Offset(0, -4),
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withAlpha(10),
           ),
         ],
       ),
@@ -54,17 +57,15 @@ class BottomSummaryBar extends StatelessWidget {
         top: false,
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Tax Slab chips
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                "Tax Slab:",
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black87,
-                ),
+            Text(
+              "Tax Slab",
+              style: TextStyle(
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w500,
+                color: Colors.black45,
               ),
             ),
             8.h.verticalSpace,
@@ -89,12 +90,12 @@ class BottomSummaryBar extends StatelessWidget {
               children: [
                 Text(
                   "Sub Total",
-                  style: TextStyle(fontSize: 14.sp, color: Colors.black87),
+                  style: TextStyle(fontSize: 13.sp, color: Colors.black45),
                 ),
                 Text(
                   "\$${subTotal.toStringAsFixed(2)}",
                   style: TextStyle(
-                    fontSize: 14.sp,
+                    fontSize: 13.sp,
                     fontWeight: FontWeight.w500,
                     color: Colors.black87,
                   ),
@@ -109,12 +110,12 @@ class BottomSummaryBar extends StatelessWidget {
               children: [
                 Text(
                   "Tax ${(taxPercent * 100).toStringAsFixed(0)}%",
-                  style: TextStyle(fontSize: 14.sp, color: Colors.black87),
+                  style: TextStyle(fontSize: 13.sp, color: Colors.black45),
                 ),
                 Text(
                   "\$${taxAmount.toStringAsFixed(2)}",
                   style: TextStyle(
-                    fontSize: 14.sp,
+                    fontSize: 13.sp,
                     fontWeight: FontWeight.w500,
                     color: Colors.black87,
                   ),
@@ -132,15 +133,15 @@ class BottomSummaryBar extends StatelessWidget {
                 Text(
                   "Total",
                   style: TextStyle(
-                    fontSize: 16.sp,
+                    fontSize: 15.sp,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black,
+                    color: Colors.black87,
                   ),
                 ),
                 Text(
                   "\$${total.toStringAsFixed(2)}",
                   style: TextStyle(
-                    fontSize: 16.sp,
+                    fontSize: 15.sp,
                     fontWeight: FontWeight.w600,
                     color: Colors.black,
                   ),
@@ -150,26 +151,11 @@ class BottomSummaryBar extends StatelessWidget {
 
             16.h.verticalSpace,
 
-            SizedBox(
-              width: double.infinity,
-              height: 48.h,
-              child: ElevatedButton(
-                onPressed: onNext,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFEA580C), // orange CTA
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.r),
-                  ),
-                  textStyle: TextStyle(
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                child: Text(
-                  isLoading ? "Please wait..." : "Next",
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ),
+            // Use the shared CustomButton for consistent styling
+            CustomButton(
+              label: primaryLabel,
+              loading: isLoading,
+              onPressed: onNext,
             ),
           ],
         ),

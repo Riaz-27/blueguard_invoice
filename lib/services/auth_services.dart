@@ -84,7 +84,6 @@ class AuthService {
   final String _base;
   final TokenSaver _saveToken;
 
-  /// POST /signup.php
   Future<SignupResult> signup({
     required String name,
     required String email,
@@ -127,10 +126,6 @@ class AuthService {
     return result;
   }
 
-  /// POST /login.php
-  ///
-  /// We now return LoginResult (which includes isSuccess, user, message).
-  /// If login is successful AND user+token exist, we also persist the token.
   Future<LoginResult> login({
     required String email,
     required String password,

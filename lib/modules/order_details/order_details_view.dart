@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:invoice/utils/colors.dart';
+import 'package:invoice/widgets/custom_button.dart';
+import 'package:invoice/widgets/custom_form_field.dart';
 
-import '../home/widgets/primary_button.dart';
 import 'order_details_controller.dart';
 import 'widgets/service_card_tile.dart';
 import 'widgets/bottom_summary_bar.dart';
 import 'widgets/labeled_field_block.dart';
 
-class OrderDetailsView extends StatelessWidget {
+class OrderDetailsView extends GetView<OrderDetailsController> {
   const OrderDetailsView({super.key});
 
   @override
@@ -16,7 +18,7 @@ class OrderDetailsView extends StatelessWidget {
     final controller = Get.put(OrderDetailsController());
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: bgColor,
       appBar: AppBar(
         title: Text(
           "Order Details",
@@ -26,13 +28,12 @@ class OrderDetailsView extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: bgColor,
+        surfaceTintColor: bgColor,
         centerTitle: true,
-        elevation: 0.5,
         iconTheme: const IconThemeData(color: Colors.black87),
       ),
 
-      /// sticky bottom summary (tax slab, subtotal, total, next btn)
       bottomNavigationBar: Obx(() {
         final sub = controller.subTotal;
         final taxP = controller.taxPercent;
@@ -41,7 +42,7 @@ class OrderDetailsView extends StatelessWidget {
 
         return BottomSummaryBar(
           provinceChips: controller.taxRates.keys.toList(),
-          selectedProvince: controller.selectedProvince.value,
+          selectedProvince: controller.selectedTaxSlab.value,
           onSelectProvince: controller.selectProvince,
           subTotal: sub,
           taxPercent: taxP,
@@ -49,6 +50,7 @@ class OrderDetailsView extends StatelessWidget {
           total: total,
           onNext: controller.isSubmitting.value ? null : controller.onNext,
           isLoading: controller.isSubmitting.value,
+          primaryLabel: "Generate Invoice", // <-- changed label
         );
       }),
 
@@ -61,126 +63,117 @@ class OrderDetailsView extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // -------------------------------------------------
-                  // SERVICES LIST (cart style cards)
-                  // -------------------------------------------------
                   Text(
                     "Services",
                     style: TextStyle(
-                      fontSize: 18.sp,
+                      fontSize: 16.sp,
                       fontWeight: FontWeight.w600,
                       color: Colors.black87,
                     ),
                   ),
                   12.h.verticalSpace,
 
-                  Obx(
-                    () => ListView.separated(
-                      physics: const NeverScrollableScrollPhysics(),
-                      shrinkWrap: true,
-                      itemCount: controller.services.length,
-                      separatorBuilder: (_, __) => 12.h.verticalSpace,
-                      itemBuilder: (_, index) {
-                        final item = controller.services[index];
-                        return ServiceCardTile(
-                          item: item,
-                          onIncrement: () => controller.incrementQty(index),
-                          onDecrement: () => controller.decrementQty(index),
-                          onRemove: () => controller.removeService(index),
-                        );
-                      },
-                    ),
-                  ),
+                  Obx(() {
+                    if (controller.services.isEmpty) {
+                      return Center(
+                        child: Text(
+                          '-- Service List is empty. Start by adding new --',
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.black38,
+                          ),
+                        ),
+                      );
+                    }
+                    return Container(
+                      padding: EdgeInsets.all(12.w),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10.r),
+                        border: Border.all(color: borderColor, width: 0.6),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withAlpha(15),
+                            offset: Offset(0, 2),
+                            blurRadius: 4.r,
+                          ),
+                        ],
+                      ),
+                      child: ListView.separated(
+                        physics: const NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        itemCount: controller.services.length,
+                        separatorBuilder: (_, __) => 8.h.verticalSpace,
+                        itemBuilder: (_, index) {
+                          final item = controller.services[index];
+                          return ServiceCardTile(
+                            item: item,
+                            onIncrement: () => controller.incrementQty(index),
+                            onDecrement: () => controller.decrementQty(index),
+                            onRemove: () => controller.removeService(index),
+                            onTitleTap: () =>
+                                _openServiceSheet(controller, editIndex: index),
+                          );
+                        },
+                      ),
+                    );
+                  }),
 
                   20.h.verticalSpace,
 
-                  // -------------------------------------------------
-                  // ADD SERVICE BUTTON (opens bottom sheet)
-                  // -------------------------------------------------
-                  PrimaryButton(
-                    label: "Add Service",
-                    onTap: () {
-                      _openAddServiceSheet(controller);
-                    },
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: CustomButton(
+                      label: "+ Add Service",
+                      txtStyle: TextStyle(fontSize: 14.sp),
+                      height: 45,
+                      btnColor: primaryColor.withAlpha(20),
+                      txtColor: primaryColor,
+                      borderColor: primaryColor,
+                      isExpanded: false,
+                      onPressed: () => _openServiceSheet(controller),
+                    ),
                   ),
-
                   24.h.verticalSpace,
 
-                  // -------------------------------------------------
-                  // NEXT SERVICE DATE + COMMENTS
-                  // -------------------------------------------------
                   Container(
-                    width: double.infinity,
+                    padding: EdgeInsets.all(16.w),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(16.r),
-                      border: Border.all(
-                        color: const Color(0xFFCBD5E1),
-                        width: 1,
-                      ),
+                      borderRadius: BorderRadius.circular(10.r),
+                      border: Border.all(color: borderColor, width: 0.6),
                       boxShadow: [
                         BoxShadow(
-                          blurRadius: 20.r,
-                          offset: const Offset(0, 8),
-                          color: Colors.black.withOpacity(0.06),
+                          color: Colors.black.withAlpha(15),
+                          offset: Offset(0, 2),
+                          blurRadius: 4.r,
                         ),
                       ],
                     ),
-                    padding: EdgeInsets.all(16.w),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Next Service Date
+                        // Date (now CustomFormField with readOnly + onTap)
                         LabeledFieldBlock(
-                          label: "Next Service Date:",
-                          child: TextField(
+                          label: "Next Service Date",
+                          child: CustomFormField(
                             controller: controller.nextServiceDateCtrl,
+                            hintText: "mm/dd/yyyy",
+                            keyboardType: TextInputType.datetime,
+                            prefixIcon: Icons.calendar_today,
                             readOnly: true,
                             onTap: () =>
                                 controller.pickNextServiceDate(context),
-                            decoration: InputDecoration(
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: 12.w,
-                                vertical: 12.h,
-                              ),
-                              suffixIcon: const Icon(Icons.calendar_today),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8.r),
-                                borderSide: BorderSide(
-                                  color: const Color(0xFFD1D9E6),
-                                  width: 1,
-                                ),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8.r),
-                                borderSide: BorderSide(
-                                  color: const Color(0xFFD1D9E6),
-                                  width: 1,
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8.r),
-                                borderSide: BorderSide(
-                                  color: const Color(0xFF4F46E5),
-                                  width: 1.4,
-                                ),
-                              ),
-                              hintText: "mm/dd/yyyy",
-                            ),
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              color: Colors.black87,
-                            ),
+                            textInputAction: TextInputAction.next,
                           ),
                         ),
 
                         20.h.verticalSpace,
 
-                        // Comments dropdown
                         Obx(
                           () => LabeledFieldBlock(
-                            label: "Comments:",
+                            label: "Comments",
                             child: DropdownButtonFormField<String>(
                               value: controller.commentType.value,
                               items: controller.commentOptions
@@ -200,8 +193,14 @@ class OrderDetailsView extends StatelessWidget {
                               onChanged: (v) {
                                 if (v != null) {
                                   controller.commentType.value = v;
+                                  if (v == 'Other' || v == 'Select a preset') {
+                                    controller.commentCtrl.text = '';
+                                  } else {
+                                    controller.commentCtrl.text = v;
+                                  }
                                 }
                               },
+                              isExpanded: true,
                               decoration: InputDecoration(
                                 isDense: true,
                                 contentPadding: EdgeInsets.symmetric(
@@ -209,27 +208,25 @@ class OrderDetailsView extends StatelessWidget {
                                   vertical: 12.h,
                                 ),
                                 border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.r),
+                                  borderRadius: BorderRadius.circular(14.r),
                                   borderSide: BorderSide(
-                                    color: const Color(0xFFD1D9E6),
-                                    width: 1,
+                                    color: Colors.grey.shade300,
                                   ),
                                 ),
                                 enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.r),
+                                  borderRadius: BorderRadius.circular(14.r),
                                   borderSide: BorderSide(
-                                    color: const Color(0xFFD1D9E6),
-                                    width: 1,
+                                    color: Colors.grey.shade300,
                                   ),
                                 ),
                                 focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.r),
-                                  borderSide: BorderSide(
-                                    color: const Color(0xFF4F46E5),
-                                    width: 1.4,
+                                  borderRadius: BorderRadius.circular(14.r),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFF2F7D61),
+                                    width: 1.2,
                                   ),
                                 ),
-                                hintText: "Select an option",
+                                hintText: "Select a preset",
                               ),
                             ),
                           ),
@@ -237,53 +234,18 @@ class OrderDetailsView extends StatelessWidget {
 
                         16.h.verticalSpace,
 
-                        // Multiline comments box
-                        TextField(
+                        CustomFormField(
                           controller: controller.commentCtrl,
+                          hintText: "Write extra notes here...",
+                          keyboardType: TextInputType.multiline,
                           maxLines: 4,
-                          decoration: InputDecoration(
-                            hintText: "Write extra notes here...",
-                            alignLabelWithHint: true,
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 12.w,
-                              vertical: 12.h,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8.r),
-                              borderSide: BorderSide(
-                                color: const Color(0xFFD1D9E6),
-                                width: 1,
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8.r),
-                              borderSide: BorderSide(
-                                color: const Color(0xFFD1D9E6),
-                                width: 1,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8.r),
-                              borderSide: BorderSide(
-                                color: const Color(0xFF4F46E5),
-                                width: 1.4,
-                              ),
-                            ),
-                            fillColor: const Color(0xFFFDFEFE),
-                            filled: true,
-                          ),
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            color: Colors.black87,
-                          ),
+                          textInputAction: TextInputAction.newline,
                         ),
                       ],
                     ),
                   ),
 
-                  120
-                      .h
-                      .verticalSpace, // leave room so bottom bar doesn't cover content
+                  120.h.verticalSpace, // keep space for bottom bar
                 ],
               ),
             ),
@@ -293,15 +255,28 @@ class OrderDetailsView extends StatelessWidget {
     );
   }
 
-  void _openAddServiceSheet(OrderDetailsController controller) {
-    final TextEditingController priceCtrl = TextEditingController(text: "0");
-    final TextEditingController qtyCtrl = TextEditingController(text: "1");
+  // Add/Edit bottom sheet (no duplicates allowed on Add)
+  void _openServiceSheet(OrderDetailsController controller, {int? editIndex}) {
+    final isEdit = editIndex != null;
+    final initial = isEdit ? controller.services[editIndex] : null;
 
-    final RxString selectedService =
-        (controller.serviceOptions.isNotEmpty
-                ? controller.serviceOptions.first
-                : "")
-            .obs;
+    final priceCtrl = TextEditingController(text: initial?.price.toString());
+    final qtyCtrl = TextEditingController(text: (initial?.qty ?? 1).toString());
+
+    // Build a filtered options list:
+    // - Exclude names already in services
+    // - BUT keep the current one if editing (so user can retain it)
+    final existing = controller.services.map((e) => e.name).toSet();
+    final availableOptions = controller.serviceOptions.where((opt) {
+      if (isEdit && opt == initial!.name) return true;
+      return !existing.contains(opt);
+    }).toList();
+
+    // Choose initial selection:
+    final String initialSelection = isEdit
+        ? initial!.name
+        : (availableOptions.isNotEmpty ? availableOptions.first : "");
+    final RxString selectedService = initialSelection.obs;
 
     Get.bottomSheet(
       SafeArea(
@@ -316,7 +291,7 @@ class OrderDetailsView extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Add Service",
+                  isEdit ? "Edit Service" : "Add Service",
                   style: TextStyle(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w600,
@@ -325,22 +300,32 @@ class OrderDetailsView extends StatelessWidget {
                 ),
                 20.h.verticalSpace,
 
-                // Service dropdown
-                Text(
-                  "Services Availed:",
-                  style: TextStyle(
-                    fontSize: 13.sp,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black87,
-                  ),
-                ),
+                _FieldLabel("Services Availed"),
                 6.h.verticalSpace,
+
+                // If no options left to add (and not editing), show a tip
+                if (!isEdit && availableOptions.isEmpty) ...[
+                  Container(
+                    padding: EdgeInsets.all(12.w),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFFBEB),
+                      border: Border.all(color: const Color(0xFFFDE68A)),
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: Text(
+                      "All services have been added already.",
+                      style: TextStyle(fontSize: 13.sp, color: Colors.black87),
+                    ),
+                  ),
+                  12.h.verticalSpace,
+                ],
+
                 Obx(
                   () => DropdownButtonFormField<String>(
                     value: selectedService.value.isEmpty
                         ? null
                         : selectedService.value,
-                    items: controller.serviceOptions
+                    items: availableOptions
                         .map(
                           (opt) => DropdownMenuItem(
                             value: opt,
@@ -355,9 +340,8 @@ class OrderDetailsView extends StatelessWidget {
                         )
                         .toList(),
                     onChanged: (v) {
-                      if (v != null) {
-                        selectedService.value = v;
-                      }
+                      if (v == null) return;
+                      selectedService.value = v;
                     },
                     decoration: InputDecoration(
                       isDense: true,
@@ -366,146 +350,138 @@ class OrderDetailsView extends StatelessWidget {
                         vertical: 12.h,
                       ),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.r),
-                        borderSide: BorderSide(
-                          color: const Color(0xFFD1D9E6),
-                          width: 1,
-                        ),
+                        borderRadius: BorderRadius.circular(14.r),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.r),
+                        borderRadius: BorderRadius.circular(14.r),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      focusedBorder: const OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(14)),
                         borderSide: BorderSide(
-                          color: const Color(0xFFD1D9E6),
-                          width: 1,
+                          color: Color(0xFF2F7D61),
+                          width: 1.2,
                         ),
                       ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.r),
-                        borderSide: BorderSide(
-                          color: const Color(0xFF4F46E5),
-                          width: 1.4,
-                        ),
-                      ),
+                      hintText: availableOptions.isEmpty
+                          ? "No services available"
+                          : "Select a service",
                     ),
                   ),
                 ),
 
                 16.h.verticalSpace,
 
-                // Price
-                Text(
-                  "Price:",
-                  style: TextStyle(
-                    fontSize: 13.sp,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black87,
-                  ),
-                ),
-                6.h.verticalSpace,
-                TextField(
-                  controller: priceCtrl,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  decoration: InputDecoration(
-                    isDense: true,
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 12.w,
-                      vertical: 12.h,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.r),
-                      borderSide: BorderSide(
-                        color: const Color(0xFFD1D9E6),
-                        width: 1,
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _FieldLabel("Price"),
+                          6.h.verticalSpace,
+                          CustomFormField(
+                            controller: priceCtrl,
+                            hintText: "Enter price",
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            prefixIcon: Icons.attach_money_rounded,
+                            validator: (v) {
+                              final d = double.tryParse((v ?? '').trim());
+                              if (d == null || d < 0) {
+                                return 'Enter a valid price';
+                              }
+                              return null;
+                            },
+                          ),
+                        ],
                       ),
                     ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.r),
-                      borderSide: BorderSide(
-                        color: const Color(0xFFD1D9E6),
-                        width: 1,
+                    12.w.horizontalSpace,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _FieldLabel("Quantity"),
+                          6.h.verticalSpace,
+                          CustomFormField(
+                            controller: qtyCtrl,
+                            hintText: "Enter quantity",
+                            keyboardType: TextInputType.number,
+                            prefixIcon: Icons.onetwothree_outlined,
+                            validator: (v) {
+                              final q = int.tryParse((v ?? '').trim());
+                              if (q == null || q < 1) {
+                                return 'Enter a valid quantity';
+                              }
+                              return null;
+                            },
+                          ),
+                        ],
                       ),
                     ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.r),
-                      borderSide: BorderSide(
-                        color: const Color(0xFF4F46E5),
-                        width: 1.4,
-                      ),
-                    ),
-                  ),
-                  style: TextStyle(fontSize: 14.sp, color: Colors.black87),
+                  ],
                 ),
 
                 16.h.verticalSpace,
-
-                // Quantity
-                Text(
-                  "Quantity:",
-                  style: TextStyle(
-                    fontSize: 13.sp,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black87,
-                  ),
-                ),
-                6.h.verticalSpace,
-                TextField(
-                  controller: qtyCtrl,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    isDense: true,
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 12.w,
-                      vertical: 12.h,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.r),
-                      borderSide: BorderSide(
-                        color: const Color(0xFFD1D9E6),
-                        width: 1,
-                      ),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.r),
-                      borderSide: BorderSide(
-                        color: const Color(0xFFD1D9E6),
-                        width: 1,
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.r),
-                      borderSide: BorderSide(
-                        color: const Color(0xFF4F46E5),
-                        width: 1.4,
-                      ),
-                    ),
-                  ),
-                  style: TextStyle(fontSize: 14.sp, color: Colors.black87),
-                ),
 
                 24.h.verticalSpace,
 
-                PrimaryButton(
-                  label: "Add",
-                  onTap: () {
-                    final name = selectedService.value.trim();
-                    final price = double.tryParse(priceCtrl.text.trim()) ?? 0;
-                    final qty = int.tryParse(qtyCtrl.text.trim()) ?? 1;
+                // Disable Add when nothing available to add
+                CustomButton(
+                  label: isEdit ? "Save" : "Add",
+                  onPressed: (!isEdit && availableOptions.isEmpty)
+                      ? null
+                      : () {
+                          final name = selectedService.value.trim();
+                          final price =
+                              double.tryParse(priceCtrl.text.trim()) ?? 0;
+                          final qty = int.tryParse(qtyCtrl.text.trim()) ?? 1;
 
-                    if (name.isEmpty) {
-                      Get.snackbar("Invalid", "Please choose a service.");
-                      return;
-                    }
+                          if (name.isEmpty) {
+                            Get.snackbar("Invalid", "Please choose a service.");
+                            return;
+                          }
 
-                    controller.addService(
-                      name: name,
-                      price: price,
-                      qty: qty < 1 ? 1 : qty,
-                    );
+                          // Second safeguard: no duplicates on Add,
+                          // and also prevent renaming to an existing name on Edit.
+                          final exists = controller.services.any(
+                            (s) => s.name == name,
+                          );
+                          if (!isEdit && exists) {
+                            Get.snackbar(
+                              "Duplicate",
+                              "This service is already added.",
+                            );
+                            return;
+                          }
+                          if (isEdit && name != initial!.name && exists) {
+                            Get.snackbar(
+                              "Duplicate",
+                              "Another service with this name already exists.",
+                            );
+                            return;
+                          }
 
-                    Get.back(); // close bottom sheet
-                  },
+                          if (isEdit) {
+                            controller.updateService(
+                              index: editIndex,
+                              name: name,
+                              price: price < 0 ? 0 : price,
+                              qty: qty < 1 ? 1 : qty,
+                            );
+                          } else {
+                            controller.addService(
+                              name: name,
+                              price: price < 0 ? 0 : price,
+                              qty: qty < 1 ? 1 : qty,
+                            );
+                          }
+
+                          Get.back();
+                        },
                 ),
               ],
             ),
@@ -515,6 +491,26 @@ class OrderDetailsView extends StatelessWidget {
       isScrollControlled: true,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+    );
+  }
+}
+
+class _FieldLabel extends StatelessWidget {
+  final String text;
+  const _FieldLabel(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 6.h),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 12.sp,
+          fontWeight: FontWeight.w500,
+          color: Colors.black87,
+        ),
       ),
     );
   }

@@ -1,12 +1,11 @@
-// lib/home/home_controller.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 
+import '../../models/cutomer_info.dart';
 import '../../routes/app_routes.dart';
 import '../../services/token_storage.dart';
-import '../order_details/order_details_controller.dart';
 
 class HomeController extends GetxController {
   // --- auth/logout state ---
@@ -27,23 +26,33 @@ class HomeController extends GetxController {
   final isLocating = false.obs;
 
   // --- form controllers (customer details) ---
-  final firstNameCtrl = TextEditingController();
-  final lastNameCtrl = TextEditingController();
-  final addressCtrl = TextEditingController();
-  final cityCtrl = TextEditingController();
-  final provinceCtrl = TextEditingController();
-  final postalCodeCtrl = TextEditingController();
-  final contactCtrl = TextEditingController();
-  final emailCtrl = TextEditingController();
+  late final TextEditingController firstNameCtrl;
+  late final TextEditingController lastNameCtrl;
+  late final TextEditingController addressCtrl;
+  late final TextEditingController cityCtrl;
+  late final TextEditingController provinceCtrl;
+  late final TextEditingController postalCodeCtrl;
+  late final TextEditingController contactCtrl;
+  late final TextEditingController emailCtrl;
 
   @override
   void onInit() {
     super.onInit();
-    // default fallback so nothing crashes if you navigate directly
+
+    // initializing all controller
+    firstNameCtrl = TextEditingController();
+    lastNameCtrl = TextEditingController();
+    addressCtrl = TextEditingController();
+    cityCtrl = TextEditingController();
+    provinceCtrl = TextEditingController();
+    postalCodeCtrl = TextEditingController();
+    contactCtrl = TextEditingController();
+    emailCtrl = TextEditingController();
+
     useCurrentLocation();
   }
 
-  // Autofill address-related fields using current device location
+  // Autofill address-related fields
   Future<void> useCurrentLocation() async {
     if (isLocating.value) return;
     isLocating.value = true;
@@ -55,12 +64,12 @@ class HomeController extends GetxController {
         Get.snackbar(
           "Location disabled",
           "Please turn on location services.",
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
         );
         return;
       }
 
-      // 2. Permission check/request
+      // Permission check/request
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
@@ -70,17 +79,17 @@ class HomeController extends GetxController {
         Get.snackbar(
           "Permission denied",
           "Please allow location permission.",
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
         );
         return;
       }
 
-      // 3. Current position
+      // Current position
       final pos = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
 
-      // 4. Reverse geocode
+      // Reverse geocode
       final placemarks = await placemarkFromCoordinates(
         pos.latitude,
         pos.longitude,
@@ -104,48 +113,42 @@ class HomeController extends GetxController {
         Get.snackbar(
           "Address filled",
           "Location captured successfully.",
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
         );
       } else {
         Get.snackbar(
           "No address found",
           "Couldn't resolve an address for your location.",
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
         );
       }
     } catch (e) {
       Get.snackbar(
         "Location error",
         e.toString(),
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
       );
     } finally {
       isLocating.value = false;
     }
   }
 
-  // Prepare data for OrderDetailsController and move to next screen
   void goNext() {
-    final map = {
-      "firstName": firstNameCtrl.text.trim(),
-      "lastName": lastNameCtrl.text.trim(),
-      "street": addressCtrl.text.trim(),
-      "city": cityCtrl.text.trim(),
-      "province": provinceCtrl.text.trim(),
-      "postalCode": postalCodeCtrl.text.trim(),
-      "email": emailCtrl.text.trim(),
-      "phone": contactCtrl.text.trim(),
-    };
+    final customerInfo = CustomerInfo(
+      firstName: firstNameCtrl.text.trim(),
+      lastName: lastNameCtrl.text.trim(),
+      street: addressCtrl.text.trim(),
+      city: cityCtrl.text.trim(),
+      province: provinceCtrl.text.trim(),
+      postalCode: postalCodeCtrl.text.trim(),
+      email: emailCtrl.text.trim(),
+      phone: contactCtrl.text.trim(),
+    );
 
-    // ensure OrderDetailsController exists
-    if (!Get.isRegistered<OrderDetailsController>()) {
-      Get.put(OrderDetailsController());
-    }
-
-    final orderCtrl = Get.find<OrderDetailsController>();
-    orderCtrl.setCustomerInfoFromMap(map);
-
-    Get.toNamed(AppRoutes.orderDetails);
+    Get.toNamed(
+      AppRoutes.orderDetails,
+      arguments: {'customerInfo': customerInfo},
+    );
   }
 
   @override

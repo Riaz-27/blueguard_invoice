@@ -1,33 +1,26 @@
-// lib/home/home_view.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:invoice/utils/colors.dart';
 
+import '../../widgets/custom_button.dart';
+import '../../widgets/custom_form_field.dart';
 import 'home_controller.dart';
 
-class HomeView extends StatelessWidget {
+class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.find<HomeController>();
+    final formKey = GlobalKey<FormState>();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: bgColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0.5,
-        title: Text(
-          "Home",
-          style: TextStyle(
-            fontSize: 16.sp,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
-          ),
-        ),
+        backgroundColor: bgColor,
+        surfaceTintColor: bgColor,
         centerTitle: false,
         actions: [
-          // Logout button
           Obx(() {
             final busy = controller.isLoggingOut.value;
             return IconButton(
@@ -49,129 +42,214 @@ class HomeView extends StatelessWidget {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
+          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 "Customer Details",
-                style: TextStyle(
-                  fontSize: 20.sp,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
+                style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w500),
               ),
-              8.h.verticalSpace,
+              6.h.verticalSpace,
               Text(
-                "Fill in the service address and contact. You can auto-fill address using GPS.",
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  height: 1.4,
-                  color: Colors.black54,
-                ),
+                "Add the contact information and service address below.",
+                style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade600),
+                textAlign: TextAlign.center,
               ),
-
               24.h.verticalSpace,
 
-              _LabeledField(
-                label: "First Name:",
-                controller: controller.firstNameCtrl,
-                keyboardType: TextInputType.name,
-              ),
-              16.h.verticalSpace,
-
-              _LabeledField(
-                label: "Last Name:",
-                controller: controller.lastNameCtrl,
-                keyboardType: TextInputType.name,
-              ),
-              16.h.verticalSpace,
-
-              _LabeledField(
-                label: "Contact Number:",
-                controller: controller.contactCtrl,
-                keyboardType: TextInputType.phone,
-              ),
-              16.h.verticalSpace,
-
-              _LabeledField(
-                label: "Email:",
-                controller: controller.emailCtrl,
-                keyboardType: TextInputType.emailAddress,
-              ),
-              16.h.verticalSpace,
-
-              // Address Line with suffix location icon
-              Obx(() {
-                final locating = controller.isLocating.value;
-                return _LabeledField(
-                  label: "Address Line:",
-                  controller: controller.addressCtrl,
-                  keyboardType: TextInputType.streetAddress,
-                  suffix: IconButton(
-                    tooltip: "Use current location",
-                    onPressed: locating ? null : controller.useCurrentLocation,
-                    icon: locating
-                        ? SizedBox(
-                            width: 18.w,
-                            height: 18.w,
-                            child: const CircularProgressIndicator(
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : const Icon(
-                            Icons.my_location_rounded,
-                            color: Colors.blueAccent,
+              Form(
+                key: formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(16.w),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10.r),
+                        border: Border.all(color: borderColor, width: 0.6),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withAlpha(15),
+                            offset: Offset(0, 2),
+                            blurRadius: 4.r,
                           ),
-                  ),
-                );
-              }),
-              16.h.verticalSpace,
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _FieldLabel("First Name"),
+                          CustomFormField(
+                            controller: controller.firstNameCtrl,
+                            hintText: "Enter first name",
+                            keyboardType: TextInputType.name,
+                            // prefixIcon: Icons.person_outline,
+                            validator: (v) => (v == null || v.trim().isEmpty)
+                                ? 'First name is required'
+                                : null,
+                          ),
+                          14.h.verticalSpace,
 
-              _LabeledField(
-                label: "City:",
-                controller: controller.cityCtrl,
-                keyboardType: TextInputType.text,
-              ),
-              16.h.verticalSpace,
+                          _FieldLabel("Last Name"),
+                          CustomFormField(
+                            controller: controller.lastNameCtrl,
+                            hintText: "Enter last name",
+                            keyboardType: TextInputType.name,
+                            // prefixIcon: Icons.person_outline,
+                            validator: (v) => (v == null || v.trim().isEmpty)
+                                ? 'Last name is required'
+                                : null,
+                          ),
+                          14.h.verticalSpace,
 
-              _LabeledField(
-                label: "Province:",
-                controller: controller.provinceCtrl,
-                keyboardType: TextInputType.text,
-              ),
-              16.h.verticalSpace,
+                          _FieldLabel("Contact Number"),
+                          CustomFormField(
+                            controller: controller.contactCtrl,
+                            hintText: "Enter contact number (optional)",
+                            keyboardType: TextInputType.phone,
+                            // prefixIcon: Icons.phone_outlined,
+                            validator: (v) {
+                              final val = (v ?? '').trim();
+                              if (val.isEmpty) return null;
+                              final digits = val.replaceAll(RegExp(r'\D'), '');
+                              if (digits.length < 7) {
+                                return 'Enter a valid phone';
+                              }
+                              return null;
+                            },
+                          ),
+                          14.h.verticalSpace,
 
-              _LabeledField(
-                label: "Postal Code:",
-                controller: controller.postalCodeCtrl,
-                keyboardType: TextInputType.text,
-              ),
-              16.h.verticalSpace,
-              24.h.verticalSpace,
-
-              SizedBox(
-                width: double.infinity,
-                height: 52.h,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4F46E5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.r),
+                          _FieldLabel("Email"),
+                          CustomFormField(
+                            controller: controller.emailCtrl,
+                            hintText: "Enter email",
+                            keyboardType: TextInputType.emailAddress,
+                            // prefixIcon: Icons.email_outlined,
+                            validator: (v) {
+                              final val = (v ?? '').trim();
+                              if (val.isEmpty) return 'Email is required';
+                              final ok = GetUtils.isEmail(v!);
+                              return ok ? null : 'Enter a valid email';
+                            },
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  onPressed: controller.goNext,
-                  child: Text(
-                    "Next",
-                    style: TextStyle(
-                      fontSize: 15.sp,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
+
+                    8.h.verticalSpace,
+
+                    // Address
+                    Container(
+                      padding: EdgeInsets.all(16.w),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10.r),
+                        border: Border.all(color: borderColor, width: 0.6),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withAlpha(15),
+                            offset: Offset(0, 2),
+                            blurRadius: 4.r,
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _FieldLabel("Address Line"),
+                          Padding(
+                            padding: EdgeInsets.only(bottom: 6.h),
+                            child: Text(
+                              "Tip: tap the location icon inside the field to refresh from current location.",
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                color: Colors.black38,
+                                height: 1.5,
+                              ),
+                            ),
+                          ),
+                          Obx(() {
+                            final locating = controller.isLocating.value;
+                            return CustomFormField(
+                              controller: controller.addressCtrl,
+                              hintText: "Street & area",
+                              keyboardType: TextInputType.streetAddress,
+                              // prefixIcon: Icons.home_outlined,
+                              suffix: IconButton(
+                                tooltip: "Use current location",
+                                onPressed: locating
+                                    ? null
+                                    : controller.useCurrentLocation,
+                                icon: locating
+                                    ? SizedBox(
+                                        width: 18.w,
+                                        height: 18.w,
+                                        child: const CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : const Icon(
+                                        Icons.my_location_rounded,
+                                        color: primaryColor,
+                                        size: 20,
+                                      ),
+                              ),
+                              validator: (v) => (v == null || v.trim().isEmpty)
+                                  ? 'Address is required'
+                                  : null,
+                            );
+                          }),
+                          14.h.verticalSpace,
+
+                          _FieldLabel("City"),
+                          CustomFormField(
+                            controller: controller.cityCtrl,
+                            hintText: "Enter city",
+                            keyboardType: TextInputType.text,
+                            // prefixIcon: Icons.location_city_outlined,
+                            validator: (v) => (v == null || v.trim().isEmpty)
+                                ? 'City is required'
+                                : null,
+                          ),
+                          14.h.verticalSpace,
+
+                          _FieldLabel("Province"),
+                          CustomFormField(
+                            controller: controller.provinceCtrl,
+                            hintText: "Enter province (optional)",
+                            keyboardType: TextInputType.text,
+                            // prefixIcon: Icons.map_outlined,
+                          ),
+                          14.h.verticalSpace,
+
+                          _FieldLabel("Postal Code"),
+                          CustomFormField(
+                            controller: controller.postalCodeCtrl,
+                            hintText: "Enter postal code (optional)",
+                            keyboardType: TextInputType.text,
+                            // prefixIcon: Icons.local_post_office_outlined,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
+
+                    18.h.verticalSpace,
+
+                    CustomButton(
+                      label: "Next",
+                      loading: false,
+                      onPressed: () {
+                        if (formKey.currentState!.validate()) {
+                          controller.goNext();
+                        }
+                      },
+                    ),
+                  ],
                 ),
               ),
-              24.h.verticalSpace,
             ],
           ),
         ),
@@ -180,66 +258,22 @@ class HomeView extends StatelessWidget {
   }
 }
 
-class _LabeledField extends StatelessWidget {
-  final String label;
-  final TextEditingController controller;
-  final TextInputType keyboardType;
-  final Widget? suffix;
-
-  const _LabeledField({
-    required this.label,
-    required this.controller,
-    required this.keyboardType,
-    this.suffix,
-  });
+class _FieldLabel extends StatelessWidget {
+  final String text;
+  const _FieldLabel(this.text);
 
   @override
   Widget build(BuildContext context) {
-    final borderColor = Colors.blueGrey.shade100;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 13.sp,
-            fontWeight: FontWeight.w500,
-            color: Colors.black87,
-          ),
+    return Padding(
+      padding: EdgeInsets.only(bottom: 6.h),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 12.sp,
+          fontWeight: FontWeight.w500,
+          color: Colors.black87,
         ),
-        6.h.verticalSpace,
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10.r),
-            border: Border.all(color: borderColor),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.03),
-                blurRadius: 8.r,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: TextField(
-            controller: controller,
-            keyboardType: keyboardType,
-            style: TextStyle(fontSize: 14.sp),
-            decoration: InputDecoration(
-              isDense: true,
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 12.w,
-                vertical: 12.h,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10.r),
-                borderSide: BorderSide.none,
-              ),
-              suffixIcon: suffix,
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

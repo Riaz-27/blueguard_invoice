@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
-import '../modules/order_details/order_details_controller.dart';
+import '../models/cutomer_info.dart';
+import '../models/service_item.dart';
 
 class SubmitOrderResult {
   final bool success;
