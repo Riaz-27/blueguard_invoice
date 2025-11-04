@@ -8,7 +8,7 @@ import '../../routes/app_routes.dart';
 import '../../services/token_storage.dart';
 
 class HomeController extends GetxController {
-  // --- auth/logout state ---
+  // auth logout state ---
   final isLoggingOut = false.obs;
 
   Future<void> logout() async {
@@ -16,38 +16,39 @@ class HomeController extends GetxController {
     isLoggingOut.value = true;
     try {
       await TokenStorage.clearToken();
+
+      //dispose controller before logging out
+      firstNameCtrl.dispose();
+      lastNameCtrl.dispose();
+      addressCtrl.dispose();
+      cityCtrl.dispose();
+      provinceCtrl.dispose();
+      postalCodeCtrl.dispose();
+      contactCtrl.dispose();
+      emailCtrl.dispose();
+
       Get.offAllNamed(AppRoutes.login);
     } finally {
       isLoggingOut.value = false;
     }
   }
 
-  // --- location autofill state ---
+  // location fetching state
   final isLocating = false.obs;
 
-  // --- form controllers (customer details) ---
-  late final TextEditingController firstNameCtrl;
-  late final TextEditingController lastNameCtrl;
-  late final TextEditingController addressCtrl;
-  late final TextEditingController cityCtrl;
-  late final TextEditingController provinceCtrl;
-  late final TextEditingController postalCodeCtrl;
-  late final TextEditingController contactCtrl;
-  late final TextEditingController emailCtrl;
+  // form controllers
+  final firstNameCtrl = TextEditingController();
+  final lastNameCtrl = TextEditingController();
+  final addressCtrl = TextEditingController();
+  final cityCtrl = TextEditingController();
+  final provinceCtrl = TextEditingController();
+  final postalCodeCtrl = TextEditingController();
+  final contactCtrl = TextEditingController();
+  final emailCtrl = TextEditingController();
 
   @override
   void onInit() {
     super.onInit();
-
-    // initializing all controller
-    firstNameCtrl = TextEditingController();
-    lastNameCtrl = TextEditingController();
-    addressCtrl = TextEditingController();
-    cityCtrl = TextEditingController();
-    provinceCtrl = TextEditingController();
-    postalCodeCtrl = TextEditingController();
-    contactCtrl = TextEditingController();
-    emailCtrl = TextEditingController();
 
     useCurrentLocation();
   }
@@ -149,18 +150,5 @@ class HomeController extends GetxController {
       AppRoutes.orderDetails,
       arguments: {'customerInfo': customerInfo},
     );
-  }
-
-  @override
-  void onClose() {
-    firstNameCtrl.dispose();
-    lastNameCtrl.dispose();
-    addressCtrl.dispose();
-    cityCtrl.dispose();
-    provinceCtrl.dispose();
-    postalCodeCtrl.dispose();
-    contactCtrl.dispose();
-    emailCtrl.dispose();
-    super.onClose();
   }
 }

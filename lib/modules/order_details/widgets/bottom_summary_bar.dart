@@ -4,26 +4,25 @@ import 'package:invoice/widgets/custom_button.dart';
 import 'tax_chip.dart';
 
 class BottomSummaryBar extends StatelessWidget {
-  final List<String> provinceChips;
-  final String selectedProvince;
-  final void Function(String code) onSelectProvince;
+  final List<String> taxSlabs;
+  final String selectedTaxSlab;
+  final void Function(String code) onSelectTaxSlab;
 
   final double subTotal;
-  final double taxPercent; // assume fractional (e.g., 0.075 for 7.5%)
+  final double taxPercent;
   final double taxAmount;
   final double total;
 
   final VoidCallback? onNext;
   final bool isLoading;
 
-  /// Optional label (defaults to "Generate Invoice")
   final String primaryLabel;
 
   const BottomSummaryBar({
     super.key,
-    required this.provinceChips,
-    required this.selectedProvince,
-    required this.onSelectProvince,
+    required this.taxSlabs,
+    required this.selectedTaxSlab,
+    required this.onSelectTaxSlab,
     required this.subTotal,
     required this.taxPercent,
     required this.taxAmount,
@@ -72,12 +71,12 @@ class BottomSummaryBar extends StatelessWidget {
             Wrap(
               spacing: 10.w,
               runSpacing: 10.h,
-              children: provinceChips.map((code) {
-                final isSelected = selectedProvince == code;
+              children: taxSlabs.map((code) {
+                final isSelected = selectedTaxSlab == code;
                 return TaxChip(
                   label: code,
                   selected: isSelected,
-                  onTap: () => onSelectProvince(code),
+                  onTap: () => onSelectTaxSlab(code),
                 );
               }).toList(),
             ),
@@ -151,7 +150,6 @@ class BottomSummaryBar extends StatelessWidget {
 
             16.h.verticalSpace,
 
-            // Use the shared CustomButton for consistent styling
             CustomButton(
               label: primaryLabel,
               loading: isLoading,

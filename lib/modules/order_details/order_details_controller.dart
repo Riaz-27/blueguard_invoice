@@ -3,39 +3,17 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:invoice/modules/home/home_controller.dart';
 
 import '../../models/cutomer_info.dart';
 import '../../models/service_item.dart';
+import '../../routes/app_routes.dart';
 import '../../services/invoice_pdf_service.dart';
 import '../../services/submit_order_service.dart';
 
 class OrderDetailsController extends GetxController {
   late final CustomerInfo customerInfo;
 
-  @override
-  void onInit() {
-    super.onInit();
-
-    if (Get.arguments?['customerInfo'] != null) {
-      customerInfo = Get.arguments?['customerInfo'] as CustomerInfo;
-    } else {
-      customerInfo = CustomerInfo(
-        firstName: "",
-        lastName: "",
-        street: "",
-        city: "",
-        province: "",
-        postalCode: "",
-        email: "",
-        phone: "",
-      );
-    }
-
-    nextServiceDateCtrl = TextEditingController(text: "2025-11-05");
-    commentCtrl = TextEditingController();
-  }
-
-  /// Cart-like services. qty 0 means not taken, qty>0 taken.
   final RxList<ServiceItem> services = <ServiceItem>[].obs;
 
   final List<String> serviceOptions = const [
@@ -55,8 +33,8 @@ class OrderDetailsController extends GetxController {
 
   final RxString selectedTaxSlab = "QC".obs;
 
-  late final TextEditingController nextServiceDateCtrl;
-  late final TextEditingController commentCtrl;
+  final nextServiceDateCtrl = TextEditingController(text: "2025-11-05");
+  final commentCtrl = TextEditingController();
 
   final RxString commentType = "Select a preset".obs;
   final List<String> commentOptions = const [
@@ -72,7 +50,9 @@ class OrderDetailsController extends GetxController {
 
   final _submitOrderService = SubmitOrderService();
 
-  // ---- calculations ----
+  final selectedServiceDate = DateTime.now().add(Duration(days: 30)).obs;
+
+  // calculations
   double get subTotal {
     double total = 0;
     for (final s in services) {
@@ -93,7 +73,35 @@ class OrderDetailsController extends GetxController {
     return subTotal + taxAmount;
   }
 
-  // ---- service list mutations ----
+  @override
+  void onInit() {
+    super.onInit();
+
+    if (Get.arguments?['customerInfo'] != null) {
+      customerInfo = Get.arguments?['customerInfo'] as CustomerInfo;
+    } else {
+      customerInfo = CustomerInfo(
+        firstName: "",
+        lastName: "",
+        street: "",
+        city: "",
+        province: "",
+        postalCode: "",
+        email: "",
+        phone: "",
+      );
+    }
+
+    // setting deafult next service date to next month
+    final nextMonth = selectedServiceDate.value;
+    final yyyy = nextMonth.year.toString();
+    final mm = nextMonth.month.toString().padLeft(2, '0');
+    final dd = nextMonth.day.toString().padLeft(2, '0');
+
+    nextServiceDateCtrl.text = '$yyyy-$mm-$dd';
+  }
+
+  // service list mutations
   void addService({
     required String name,
     required double price,
@@ -123,7 +131,7 @@ class OrderDetailsController extends GetxController {
     services.refresh();
   }
 
-  void selectProvince(String code) {
+  void selectTaxSlab(String code) {
     selectedTaxSlab.value = code;
   }
 
@@ -133,10 +141,11 @@ class OrderDetailsController extends GetxController {
       context: context,
       firstDate: now,
       lastDate: DateTime(now.year + 20),
-      initialDate: now,
+      initialDate: selectedServiceDate.value,
     );
 
     if (picked != null) {
+      selectedServiceDate.value = picked;
       final yyyy = picked.year.toString();
       final mm = picked.month.toString().padLeft(2, '0');
       final dd = picked.day.toString().padLeft(2, '0');
@@ -155,7 +164,6 @@ class OrderDetailsController extends GetxController {
     services.refresh();
   }
 
-  // ---- first submit_order, then generate PDF ----
   Future<void> onNext() async {
     if (services.isEmpty) {
       Get.snackbar("No services", "Please add at least one service.");
@@ -192,7 +200,7 @@ class OrderDetailsController extends GetxController {
       final logoData = await rootBundle.load('assets/logo.webp');
       final logoBytes = logoData.buffer.asUint8List();
 
-      // 3. Generate the PDF (page 1 + page 2)
+      // Generate the PDF
       final invoiceNo = _generateInvoiceNumber();
       final now = DateTime.now();
 
@@ -211,15 +219,8 @@ class OrderDetailsController extends GetxController {
         logoBytes: logoBytes,
       );
 
-      // Get.snackbar(
-      //   "Success",
-      //   apiResult.message.isNotEmpty
-      //       ? apiResult.message
-      //       : "Order saved & PDF generated.",
-      // );
-
       // after success
-      // Get.offAllNamed(AppRoutes.home);
+      Get.offAllNamed(AppRoutes.home);
     } catch (e) {
       Get.snackbar("Error", e.toString());
     } finally {

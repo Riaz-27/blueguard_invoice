@@ -41,16 +41,16 @@ class OrderDetailsView extends GetView<OrderDetailsController> {
         final total = controller.totalAfterTax;
 
         return BottomSummaryBar(
-          provinceChips: controller.taxRates.keys.toList(),
-          selectedProvince: controller.selectedTaxSlab.value,
-          onSelectProvince: controller.selectProvince,
+          taxSlabs: controller.taxRates.keys.toList(),
+          selectedTaxSlab: controller.selectedTaxSlab.value,
+          onSelectTaxSlab: controller.selectTaxSlab,
           subTotal: sub,
           taxPercent: taxP,
           taxAmount: taxVal,
           total: total,
           onNext: controller.isSubmitting.value ? null : controller.onNext,
           isLoading: controller.isSubmitting.value,
-          primaryLabel: "Generate Invoice", // <-- changed label
+          primaryLabel: "Generate Invoice",
         );
       }),
 
@@ -154,7 +154,7 @@ class OrderDetailsView extends GetView<OrderDetailsController> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Date (now CustomFormField with readOnly + onTap)
+                        // Date
                         LabeledFieldBlock(
                           label: "Next Service Date",
                           child: CustomFormField(
@@ -245,7 +245,7 @@ class OrderDetailsView extends GetView<OrderDetailsController> {
                     ),
                   ),
 
-                  120.h.verticalSpace, // keep space for bottom bar
+                  120.h.verticalSpace,
                 ],
               ),
             ),
@@ -255,7 +255,7 @@ class OrderDetailsView extends GetView<OrderDetailsController> {
     );
   }
 
-  // Add/Edit bottom sheet (no duplicates allowed on Add)
+  // Add/Edit bottom sheet
   void _openServiceSheet(OrderDetailsController controller, {int? editIndex}) {
     final isEdit = editIndex != null;
     final initial = isEdit ? controller.services[editIndex] : null;
@@ -263,9 +263,7 @@ class OrderDetailsView extends GetView<OrderDetailsController> {
     final priceCtrl = TextEditingController(text: initial?.price.toString());
     final qtyCtrl = TextEditingController(text: (initial?.qty ?? 1).toString());
 
-    // Build a filtered options list:
-    // - Exclude names already in services
-    // - BUT keep the current one if editing (so user can retain it)
+    // Build a filtered options list
     final existing = controller.services.map((e) => e.name).toSet();
     final availableOptions = controller.serviceOptions.where((opt) {
       if (isEdit && opt == initial!.name) return true;

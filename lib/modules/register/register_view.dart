@@ -76,9 +76,7 @@ class RegisterView extends GetView<RegisterController> {
                             validator: (v) {
                               final val = (v ?? '').trim();
                               if (val.isEmpty) return 'Email is required';
-                              final ok = RegExp(
-                                r"^[\w\.\-]+@([\w\-]+\.)+[a-zA-Z]{2,}$",
-                              ).hasMatch(val);
+                              final ok = GetUtils.isEmail(v!);
                               if (!ok) return 'Enter a valid email';
                               return null;
                             },
@@ -95,7 +93,7 @@ class RegisterView extends GetView<RegisterController> {
                             validator: (v) {
                               final val = (v ?? '');
                               if (val.isEmpty) return 'Password is required';
-                              if (val.length < 6) return 'Minimum 6 characters';
+                              if (val.length < 4) return 'Minimum 4 characters';
                               return null;
                             },
                           ),

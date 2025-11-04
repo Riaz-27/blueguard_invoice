@@ -27,20 +27,13 @@ class ServiceCardTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16.r),
-          // boxShadow: [
-          //   BoxShadow(
-          //     blurRadius: 20.r,
-          //     offset: const Offset(0, 8),
-          //     color: Colors.black.withAlpha(15),
-          //   ),
-          // ],
           border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
 
           children: [
-            // ICON / THUMBNAIL
+            // ICON
             Container(
               width: 50.w,
               height: 50.w,
@@ -61,7 +54,6 @@ class ServiceCardTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // first row: name + close btn
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -87,7 +79,7 @@ class ServiceCardTile extends StatelessWidget {
                     ],
                   ),
 
-                  // bottom row: price + qty pill
+                  // price + qty pill
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [

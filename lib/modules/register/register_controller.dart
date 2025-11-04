@@ -5,10 +5,9 @@ import 'package:invoice/routes/app_routes.dart';
 import '../../services/auth_services.dart';
 
 class RegisterController extends GetxController {
-  // === UI state ===
   final isLoading = false.obs;
 
-  // === Form controllers (used by CustomFormField) ===
+  // Form controllers
   final nameCtrl = TextEditingController();
   final emailCtrl = TextEditingController();
   final passwordCtrl = TextEditingController();
@@ -20,20 +19,6 @@ class RegisterController extends GetxController {
     final name = nameCtrl.text.trim();
     final email = emailCtrl.text.trim();
     final password = passwordCtrl.text;
-    final confirm = confirmCtrl.text;
-
-    if (name.isEmpty || email.isEmpty || password.isEmpty || confirm.isEmpty) {
-      Get.snackbar('Error', 'All fields are required');
-      return;
-    }
-    if (password.length < 6) {
-      Get.snackbar('Error', 'Password must be at least 6 characters');
-      return;
-    }
-    if (password != confirm) {
-      Get.snackbar('Error', 'Passwords do not match');
-      return;
-    }
 
     try {
       isLoading.value = true;

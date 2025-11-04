@@ -32,14 +32,14 @@ class AppPages {
       name: AppRoutes.home,
       page: () => const HomeView(),
       binding: BindingsBuilder(() {
-        Get.put(HomeController());
+        Get.lazyPut(() => HomeController(), fenix: true);
       }),
     ),
     GetPage(
       name: AppRoutes.orderDetails,
       page: () => const OrderDetailsView(),
       binding: BindingsBuilder(() {
-        Get.put(OrderDetailsController());
+        Get.lazyPut(() => OrderDetailsController(), fenix: true);
       }),
     ),
   ];

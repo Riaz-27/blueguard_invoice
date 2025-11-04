@@ -85,7 +85,6 @@ class HomeView extends GetView<HomeController> {
                             controller: controller.firstNameCtrl,
                             hintText: "Enter first name",
                             keyboardType: TextInputType.name,
-                            // prefixIcon: Icons.person_outline,
                             validator: (v) => (v == null || v.trim().isEmpty)
                                 ? 'First name is required'
                                 : null,
@@ -97,7 +96,6 @@ class HomeView extends GetView<HomeController> {
                             controller: controller.lastNameCtrl,
                             hintText: "Enter last name",
                             keyboardType: TextInputType.name,
-                            // prefixIcon: Icons.person_outline,
                             validator: (v) => (v == null || v.trim().isEmpty)
                                 ? 'Last name is required'
                                 : null,
@@ -109,7 +107,6 @@ class HomeView extends GetView<HomeController> {
                             controller: controller.contactCtrl,
                             hintText: "Enter contact number (optional)",
                             keyboardType: TextInputType.phone,
-                            // prefixIcon: Icons.phone_outlined,
                             validator: (v) {
                               final val = (v ?? '').trim();
                               if (val.isEmpty) return null;
@@ -127,7 +124,6 @@ class HomeView extends GetView<HomeController> {
                             controller: controller.emailCtrl,
                             hintText: "Enter email",
                             keyboardType: TextInputType.emailAddress,
-                            // prefixIcon: Icons.email_outlined,
                             validator: (v) {
                               final val = (v ?? '').trim();
                               if (val.isEmpty) return 'Email is required';
@@ -177,7 +173,6 @@ class HomeView extends GetView<HomeController> {
                               controller: controller.addressCtrl,
                               hintText: "Street & area",
                               keyboardType: TextInputType.streetAddress,
-                              // prefixIcon: Icons.home_outlined,
                               suffix: IconButton(
                                 tooltip: "Use current location",
                                 onPressed: locating
@@ -221,7 +216,6 @@ class HomeView extends GetView<HomeController> {
                             controller: controller.provinceCtrl,
                             hintText: "Enter province (optional)",
                             keyboardType: TextInputType.text,
-                            // prefixIcon: Icons.map_outlined,
                           ),
                           14.h.verticalSpace,
 
@@ -230,7 +224,6 @@ class HomeView extends GetView<HomeController> {
                             controller: controller.postalCodeCtrl,
                             hintText: "Enter postal code (optional)",
                             keyboardType: TextInputType.text,
-                            // prefixIcon: Icons.local_post_office_outlined,
                           ),
                         ],
                       ),
