@@ -11,8 +11,6 @@ import '../modules/home/home_view.dart';
 import 'app_routes.dart';
 
 class AppPages {
-  static const initial = AppRoutes.splash;
-
   static final routes = [
     GetPage(
       name: AppRoutes.login,
@@ -32,14 +30,14 @@ class AppPages {
       name: AppRoutes.home,
       page: () => const HomeView(),
       binding: BindingsBuilder(() {
-        Get.lazyPut(() => HomeController(), fenix: true);
+        Get.put(HomeController(), permanent: true);
       }),
     ),
     GetPage(
       name: AppRoutes.orderDetails,
       page: () => const OrderDetailsView(),
       binding: BindingsBuilder(() {
-        Get.lazyPut(() => OrderDetailsController(), fenix: true);
+        Get.put(OrderDetailsController());
       }),
     ),
   ];

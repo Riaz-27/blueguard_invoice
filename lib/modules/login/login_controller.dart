@@ -4,6 +4,7 @@ import 'package:invoice/routes/app_routes.dart';
 
 import '../../services/auth_services.dart';
 import '../../services/token_storage.dart';
+import '../home/home_controller.dart';
 
 class LoginController extends GetxController {
   final isLoading = false.obs;
@@ -28,7 +29,9 @@ class LoginController extends GetxController {
         if (user.hasToken) {
           await TokenStorage.saveToken(user.token);
         }
-
+        if (Get.isRegistered<HomeController>()) {
+          Get.find<HomeController>().reinitializeController();
+        }
         Get.offAllNamed(AppRoutes.home);
       } else {
         Get.snackbar(

@@ -44,18 +44,27 @@ class CustomButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(borderRadius ?? 8.r),
           ),
           side: BorderSide(
-            color: borderColor ?? Colors.transparent,
+            color: loading
+                ? Colors.transparent
+                : borderColor ?? Colors.transparent,
             width: borderColor != null ? 1 : 0,
           ),
         ),
         child: loading
-            ? const SizedBox(
-                height: 22,
-                width: 22,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
+            ? Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    height: 16.h,
+                    width: 16.w,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+                    ),
+                  ),
+                  4.w.horizontalSpace,
+                  Text('Loading...'),
+                ],
               )
             : Text(
                 label,

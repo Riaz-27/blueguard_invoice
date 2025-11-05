@@ -1,5 +1,4 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -11,48 +10,36 @@ import '../../routes/app_routes.dart';
 import '../../services/invoice_pdf_service.dart';
 import '../../services/submit_order_service.dart';
 
+// NEW
+import '../../services/services_service.dart';
+import '../../services/taxes_service.dart';
+import '../../services/comments_service.dart';
+
 class OrderDetailsController extends GetxController {
   late final CustomerInfo customerInfo;
 
+  final isLoading = false.obs;
+
   final RxList<ServiceItem> services = <ServiceItem>[].obs;
+  final RxList<String> serviceOptions = <String>[].obs;
 
-  final List<String> serviceOptions = const [
-    "Air duct cleaning",
-    "Air exchanger cleaning",
-    "Heat pump cleaning W/split unit",
-    "Dryer vent cleaning",
-    "Furnace blower cleaning",
-    "Power cleaning with sweeper line method",
-    "Central vacuum cleaning with outlet",
-    "Sanitizing with spray bottle",
-    "Sanitization with fogger",
-    "Additional Services",
-  ];
+  final RxMap<String, double> taxRates = <String, double>{}.obs;
+  final RxMap<String, String> taxNos = <String, String>{}.obs;
 
-  final Map<String, double> taxRates = const {"QC": 0.15, "ON": 0.13};
+  final RxString selectedTaxSlab = ''.obs;
 
-  final RxString selectedTaxSlab = "QC".obs;
+  final RxnString commentType = RxnString();
+  final RxList<String> commentOptions = <String>[].obs;
 
-  final nextServiceDateCtrl = TextEditingController(text: "2025-11-05");
+  final nextServiceDateCtrl = TextEditingController();
   final commentCtrl = TextEditingController();
 
-  final RxString commentType = "Select a preset".obs;
-  final List<String> commentOptions = const [
-    "Select a preset",
-    "Heating and cooling system checked. Systems working properly",
-    "Recommend filter replacement soon",
-    "Customer requested callback",
-    "Unable to access location",
-    "Other",
-  ];
-
   final isSubmitting = false.obs;
-
   final _submitOrderService = SubmitOrderService();
 
-  final selectedServiceDate = DateTime.now().add(Duration(days: 30)).obs;
+  final selectedServiceDate = DateTime.now().add(const Duration(days: 30)).obs;
 
-  // calculations
+  // ----------------- Calculations -----------------
   double get subTotal {
     double total = 0;
     for (final s in services) {
@@ -69,9 +56,9 @@ class OrderDetailsController extends GetxController {
     return ((subTotal * taxPercent) * 100).round() / 100;
   }
 
-  double get totalAfterTax {
-    return subTotal + taxAmount;
-  }
+  double get totalAfterTax => subTotal + taxAmount;
+
+  String get selectedTaxNo => taxNos[selectedTaxSlab.value] ?? '';
 
   @override
   void onInit() {
@@ -92,16 +79,75 @@ class OrderDetailsController extends GetxController {
       );
     }
 
-    // setting deafult next service date to next month
-    final nextMonth = selectedServiceDate.value;
-    final yyyy = nextMonth.year.toString();
-    final mm = nextMonth.month.toString().padLeft(2, '0');
-    final dd = nextMonth.day.toString().padLeft(2, '0');
+    // default next service date = +30 days
+    final d = selectedServiceDate.value;
+    nextServiceDateCtrl.text =
+        '${d.year}-${d.month.toString().padLeft(2, "0")}-${d.day.toString().padLeft(2, "0")}';
 
-    nextServiceDateCtrl.text = '$yyyy-$mm-$dd';
+    _loadAll();
   }
 
-  // service list mutations
+  Future<void> _loadAll() async {
+    isLoading.value = true;
+    await Future.wait([
+      _loadServices(),
+      _loadComments(),
+      _loadTaxesAndSelectDefault(),
+    ]);
+    isLoading.value = false;
+  }
+
+  Future<void> _loadServices() async {
+    try {
+      final names = await ServicesService().fetchServiceNames();
+      serviceOptions.assignAll(names);
+    } catch (e) {
+      Get.snackbar('Services', e.toString());
+    }
+  }
+
+  Future<void> _loadComments() async {
+    try {
+      final presets = await CommentsService().fetchCommentPresets();
+      commentOptions.assignAll(['Select a preset', ...presets]);
+      commentType.value = 'Select a preset';
+    } catch (e) {
+      Get.snackbar('Comments', e.toString());
+    }
+  }
+
+  Future<void> _loadTaxesAndSelectDefault() async {
+    try {
+      final resp = await TaxesService().fetchTaxes();
+
+      taxRates.assignAll({for (final t in resp.data) t.area: t.fraction});
+      taxNos.assignAll({for (final t in resp.data) t.area: t.taxNo});
+
+      // auto-select by matching province
+      final prov = (customerInfo.province).toString().trim().toLowerCase();
+      String? match;
+      if (prov.isNotEmpty) {
+        for (final area in taxRates.keys) {
+          final a = area.toLowerCase();
+          if (prov.contains(a) || a.contains(prov)) {
+            match = area;
+            break;
+          }
+        }
+      }
+      final chosen =
+          match ?? (taxRates.keys.isNotEmpty ? taxRates.keys.first : '');
+      selectedTaxSlab.value = chosen;
+    } catch (e) {
+      Get.snackbar('Taxes', e.toString());
+      if (taxRates.isNotEmpty) {
+        final first = taxRates.keys.first;
+        selectedTaxSlab.value = first;
+      }
+    }
+  }
+
+  // ----------------- Mutations -----------------
   void addService({
     required String name,
     required double price,
@@ -131,8 +177,25 @@ class OrderDetailsController extends GetxController {
     services.refresh();
   }
 
-  void selectTaxSlab(String code) {
-    selectedTaxSlab.value = code;
+  void selectTaxSlab(String area) {
+    selectedTaxSlab.value = area;
+  }
+
+  void onCommentChange(String? preset) {
+    if (preset != null) {
+      commentType.value = preset;
+      if (preset == 'Select a preset') {
+        commentCtrl.text += '';
+      } else {
+        if (commentCtrl.text.isEmpty) {
+          commentCtrl.text = preset;
+        } else {
+          if (!commentCtrl.text.contains(preset)) {
+            commentCtrl.text += ' $preset';
+          }
+        }
+      }
+    }
   }
 
   Future<void> pickNextServiceDate(BuildContext context) async {
@@ -143,13 +206,10 @@ class OrderDetailsController extends GetxController {
       lastDate: DateTime(now.year + 20),
       initialDate: selectedServiceDate.value,
     );
-
     if (picked != null) {
       selectedServiceDate.value = picked;
-      final yyyy = picked.year.toString();
-      final mm = picked.month.toString().padLeft(2, '0');
-      final dd = picked.day.toString().padLeft(2, '0');
-      nextServiceDateCtrl.text = "$yyyy-$mm-$dd";
+      nextServiceDateCtrl.text =
+          '${picked.year}-${picked.month.toString().padLeft(2, "0")}-${picked.day.toString().padLeft(2, "0")}';
     }
   }
 
@@ -164,6 +224,7 @@ class OrderDetailsController extends GetxController {
     services.refresh();
   }
 
+  // ----------------- Submit & PDF -----------------
   Future<void> onNext() async {
     if (services.isEmpty) {
       Get.snackbar("No services", "Please add at least one service.");
@@ -172,7 +233,7 @@ class OrderDetailsController extends GetxController {
 
     isSubmitting.value = true;
     try {
-      // submit order to backend
+      //Submit order
       final apiResult = await _submitOrderService.submitOrder(
         customer: customerInfo,
         services: services.toList(),
@@ -193,14 +254,14 @@ class OrderDetailsController extends GetxController {
         return;
       }
 
-      // Load assets for PDF
+      // Load assets for PDF pages
       final fullPageData = await rootBundle.load('assets/terms.jpg');
       final fullPageImageBytes = fullPageData.buffer.asUint8List();
 
       final logoData = await rootBundle.load('assets/logo.webp');
       final logoBytes = logoData.buffer.asUint8List();
 
-      // Generate the PDF
+      //Generate PDF
       final invoiceNo = _generateInvoiceNumber();
       final now = DateTime.now();
 
@@ -211,6 +272,7 @@ class OrderDetailsController extends GetxController {
         services: services.toList(),
         subTotal: subTotal,
         taxPercent: taxPercent,
+        taxNo: selectedTaxNo,
         taxAmount: taxAmount,
         total: totalAfterTax,
         remarks: commentCtrl.text.trim(),
@@ -219,7 +281,7 @@ class OrderDetailsController extends GetxController {
         logoBytes: logoBytes,
       );
 
-      // after success
+      Get.find<HomeController>().reinitializeController();
       Get.offAllNamed(AppRoutes.home);
     } catch (e) {
       Get.snackbar("Error", e.toString());

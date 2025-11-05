@@ -29,21 +29,20 @@ class SubmitOrderService {
   Future<SubmitOrderResult> submitOrder({
     required CustomerInfo customer,
     required List<ServiceItem> services,
-    required double taxPercent, // e.g. 0.15
-    required double totalPrice, // final total WITH tax
+    required double taxPercent,
+    required double totalPrice,
     required String nextServiceDate,
     required String comments,
   }) async {
     if (_base.isEmpty) {
-      throw StateError('API_BASE_URL is empty. Check your .env.');
+      throw StateError('Server URL is empty');
     }
 
     final uri = Uri.parse('$_base/submit_order.php');
 
-    // taxSlab in API is string like "15%"
-    final taxSlabStr = "${(taxPercent * 100).toStringAsFixed(0)}%";
+    final taxSlabStr = "${(taxPercent * 100).toStringAsFixed(2)}%";
 
-    // services array: [{name, price, qty}, ...]
+    // services array
     final serviceList = services.map((s) {
       return {"name": s.name, "price": s.price, "qty": s.qty};
     }).toList();
@@ -74,7 +73,6 @@ class SubmitOrderService {
         .timeout(const Duration(seconds: 20));
 
     if (res.statusCode != 200) {
-      // server didn't accept or something went wrong at HTTP layer
       throw Exception('HTTP ${res.statusCode}: ${res.reasonPhrase}');
     }
 

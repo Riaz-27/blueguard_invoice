@@ -14,8 +14,6 @@ class InvoicePdfService {
   ///  - Page 1: Invoice with header logo
   ///  - Page 2: Full-bleed A4 image
   ///
-  /// [logoBytes] is your company logo from assets (webp/png/jpg).
-  /// [fullPageImageBytes] is the A4-sized background page image.
   static Future<void> generateAndOpenInvoicePdf({
     required String invoiceNumber,
     required DateTime invoiceDate,
@@ -23,6 +21,7 @@ class InvoicePdfService {
     required List<ServiceItem> services,
     required double subTotal,
     required double taxPercent,
+    required String taxNo,
     required double taxAmount,
     required double total,
     required String remarks,
@@ -47,6 +46,7 @@ class InvoicePdfService {
             services: services,
             subTotal: subTotal,
             taxPercent: taxPercent,
+            taxNo: taxNo,
             taxAmount: taxAmount,
             total: total,
             remarks: remarks,
@@ -86,9 +86,7 @@ class InvoicePdfService {
     await OpenFilex.open(filePath);
   }
 
-  // --------------------------------------------------------------------------
   // PAGE 1 CONTENT
-  // --------------------------------------------------------------------------
   static pw.Widget _invoiceBody({
     required String invoiceNumber,
     required String dateStr,
@@ -96,6 +94,7 @@ class InvoicePdfService {
     required List<ServiceItem> services,
     required double subTotal,
     required double taxPercent,
+    required String taxNo,
     required double taxAmount,
     required double total,
     required String remarks,
@@ -192,7 +191,6 @@ class InvoicePdfService {
               pw.Expanded(
                 flex: 1,
                 child: pw.Container(
-                  // padding: const pw.EdgeInsets.all(8),
                   child: pw.Table(
                     border: pw.TableBorder.all(color: borderColor, width: 0.5),
                     columnWidths: {
@@ -380,7 +378,7 @@ class InvoicePdfService {
               alignment: pw.Alignment.center,
             ),
             cell(
-              s.price == 0 ? "-" : s.price.toStringAsFixed(2),
+              s.price == 0 ? "-" : '\$${s.price.toStringAsFixed(2)}',
               alignment: pw.Alignment.centerRight,
             ),
           ],
@@ -423,7 +421,7 @@ class InvoicePdfService {
         pw.TableRow(
           children: [
             cell(
-              "Tax (${(taxPercent * 100).toStringAsFixed(0)}%)",
+              "Tax ($taxNo) ${(taxPercent * 100).toStringAsFixed(2)}%",
               alignment: pw.Alignment.center,
               style: boldTableTextStyle,
             ),

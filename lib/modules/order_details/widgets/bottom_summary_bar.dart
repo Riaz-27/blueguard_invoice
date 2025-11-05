@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:invoice/widgets/custom_button.dart';
+import '../../../utils/colors.dart';
 import 'tax_chip.dart';
 
 class BottomSummaryBar extends StatelessWidget {
@@ -68,18 +69,38 @@ class BottomSummaryBar extends StatelessWidget {
               ),
             ),
             8.h.verticalSpace,
-            Wrap(
-              spacing: 10.w,
-              runSpacing: 10.h,
-              children: taxSlabs.map((code) {
-                final isSelected = selectedTaxSlab == code;
-                return TaxChip(
-                  label: code,
-                  selected: isSelected,
-                  onTap: () => onSelectTaxSlab(code),
-                );
-              }).toList(),
-            ),
+            isLoading
+                ? Center(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          height: 16.h,
+                          width: 16.w,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              primaryColor,
+                            ),
+                          ),
+                        ),
+                        4.w.horizontalSpace,
+                        Text('Loading...'),
+                      ],
+                    ),
+                  )
+                : Wrap(
+                    spacing: 10.w,
+                    runSpacing: 10.h,
+                    children: taxSlabs.map((code) {
+                      final isSelected = selectedTaxSlab == code;
+                      return TaxChip(
+                        label: code,
+                        selected: isSelected,
+                        onTap: () => onSelectTaxSlab(code),
+                      );
+                    }).toList(),
+                  ),
 
             16.h.verticalSpace,
 
@@ -108,7 +129,7 @@ class BottomSummaryBar extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  "Tax ${(taxPercent * 100).toStringAsFixed(0)}%",
+                  "Tax ${(taxPercent * 100).toStringAsFixed(2)}%",
                   style: TextStyle(fontSize: 13.sp, color: Colors.black45),
                 ),
                 Text(

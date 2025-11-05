@@ -49,7 +49,7 @@ class OrderDetailsView extends GetView<OrderDetailsController> {
           taxAmount: taxVal,
           total: total,
           onNext: controller.isSubmitting.value ? null : controller.onNext,
-          isLoading: controller.isSubmitting.value,
+          isLoading: controller.isLoading.value,
           primaryLabel: "Generate Invoice",
         );
       }),
@@ -124,16 +124,20 @@ class OrderDetailsView extends GetView<OrderDetailsController> {
 
                   Align(
                     alignment: Alignment.centerRight,
-                    child: CustomButton(
-                      label: "+ Add Service",
-                      txtStyle: TextStyle(fontSize: 14.sp),
-                      height: 45,
-                      btnColor: primaryColor.withAlpha(20),
-                      txtColor: primaryColor,
-                      borderColor: primaryColor,
-                      isExpanded: false,
-                      onPressed: () => _openServiceSheet(controller),
-                    ),
+                    child: Obx(() {
+                      final isLoading = controller.isLoading.value;
+                      return CustomButton(
+                        label: "+ Add Service",
+                        txtStyle: TextStyle(fontSize: 14.sp),
+                        height: 45,
+                        btnColor: primaryColor.withAlpha(20),
+                        txtColor: primaryColor,
+                        borderColor: primaryColor,
+                        isExpanded: false,
+                        loading: isLoading,
+                        onPressed: () => _openServiceSheet(controller),
+                      );
+                    }),
                   ),
                   24.h.verticalSpace,
 
@@ -175,7 +179,7 @@ class OrderDetailsView extends GetView<OrderDetailsController> {
                           () => LabeledFieldBlock(
                             label: "Comments",
                             child: DropdownButtonFormField<String>(
-                              value: controller.commentType.value,
+                              initialValue: controller.commentType.value,
                               items: controller.commentOptions
                                   .map(
                                     (opt) => DropdownMenuItem(
@@ -190,16 +194,7 @@ class OrderDetailsView extends GetView<OrderDetailsController> {
                                     ),
                                   )
                                   .toList(),
-                              onChanged: (v) {
-                                if (v != null) {
-                                  controller.commentType.value = v;
-                                  if (v == 'Other' || v == 'Select a preset') {
-                                    controller.commentCtrl.text = '';
-                                  } else {
-                                    controller.commentCtrl.text = v;
-                                  }
-                                }
-                              },
+                              onChanged: controller.onCommentChange,
                               isExpanded: true,
                               decoration: InputDecoration(
                                 isDense: true,

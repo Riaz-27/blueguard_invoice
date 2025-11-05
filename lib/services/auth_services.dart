@@ -21,13 +21,13 @@ class AuthUser {
   });
 
   factory AuthUser.fromJson(Map<String, dynamic> j) {
-    String _toString(dynamic v) => v?.toString() ?? '';
+    String toString(dynamic v) => v?.toString() ?? '';
 
     return AuthUser(
-      id: _toString(j['id']),
-      name: _toString(j['name']),
-      email: _toString(j['email']),
-      token: _toString(j['token']),
+      id: toString(j['id']),
+      name: toString(j['name']),
+      email: toString(j['email']),
+      token: toString(j['token']),
     );
   }
 
@@ -90,7 +90,7 @@ class AuthService {
     required String password,
   }) async {
     if (_base.isEmpty) {
-      throw StateError('API_BASE_URL is empty. Check your .env.');
+      throw StateError('Server URL is empty');
     }
 
     final uri = Uri.parse('$_base/signup.php');
@@ -131,7 +131,7 @@ class AuthService {
     required String password,
   }) async {
     if (_base.isEmpty) {
-      throw StateError('API_BASE_URL is empty. Check your .env.');
+      throw StateError('Server URL is empty');
     }
 
     final uri = Uri.parse('$_base/login.php');
@@ -161,7 +161,7 @@ class AuthService {
 
     final result = LoginResult.fromJson(decoded);
 
-    // if backend said success, store token (if present)
+    // if success, store token
     if (result.isSuccess && result.user != null && result.user!.hasToken) {
       await _saveToken(result.user!.token);
     }

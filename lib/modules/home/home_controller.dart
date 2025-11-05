@@ -17,16 +17,6 @@ class HomeController extends GetxController {
     try {
       await TokenStorage.clearToken();
 
-      //dispose controller before logging out
-      firstNameCtrl.dispose();
-      lastNameCtrl.dispose();
-      addressCtrl.dispose();
-      cityCtrl.dispose();
-      provinceCtrl.dispose();
-      postalCodeCtrl.dispose();
-      contactCtrl.dispose();
-      emailCtrl.dispose();
-
       Get.offAllNamed(AppRoutes.login);
     } finally {
       isLoggingOut.value = false;
@@ -50,7 +40,20 @@ class HomeController extends GetxController {
   void onInit() {
     super.onInit();
 
+    firstNameCtrl.clear();
+    lastNameCtrl.clear();
+    addressCtrl.clear();
+    cityCtrl.clear();
+    provinceCtrl.clear();
+    postalCodeCtrl.clear();
+    contactCtrl.clear();
+    emailCtrl.clear();
+
     useCurrentLocation();
+  }
+
+  void reinitializeController() {
+    onInit();
   }
 
   // Autofill address-related fields
@@ -150,5 +153,18 @@ class HomeController extends GetxController {
       AppRoutes.orderDetails,
       arguments: {'customerInfo': customerInfo},
     );
+  }
+
+  @override
+  void onClose() {
+    firstNameCtrl.dispose();
+    lastNameCtrl.dispose();
+    addressCtrl.dispose();
+    cityCtrl.dispose();
+    provinceCtrl.dispose();
+    postalCodeCtrl.dispose();
+    contactCtrl.dispose();
+    emailCtrl.dispose();
+    super.onClose();
   }
 }
