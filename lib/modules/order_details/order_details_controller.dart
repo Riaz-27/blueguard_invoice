@@ -26,7 +26,9 @@ class OrderDetailsController extends GetxController {
   final RxMap<String, double> taxRates = <String, double>{}.obs;
   final RxMap<String, String> taxNos = <String, String>{}.obs;
 
+  final ScrollController scrollController = ScrollController();
   final RxString selectedTaxSlab = ''.obs;
+  final GlobalKey itemKey = GlobalKey();
 
   final RxnString commentType = RxnString();
   final RxList<String> commentOptions = <String>[].obs;
@@ -94,7 +96,42 @@ class OrderDetailsController extends GetxController {
       _loadComments(),
       _loadTaxesAndSelectDefault(),
     ]);
+
+    // Delay scroll until after ListView rebuilds with new data
+    Future.delayed(const Duration(milliseconds: 100), () {
+      _scrollToSelectedItem();
+    });
+
     isLoading.value = false;
+  }
+
+  void _scrollToSelectedItem() {
+    if (itemKey.currentContext == null) return;
+
+    final RenderBox box =
+        itemKey.currentContext!.findRenderObject() as RenderBox;
+    final double itemWidth = box.size.width;
+
+    final selectedIndex = taxRates.keys.toList().indexWhere(
+      (val) => selectedTaxSlab.value == val,
+    );
+
+    if (selectedIndex < 0) return;
+
+    final double screenWidth = Get.width;
+
+    double position =
+        (selectedIndex * (itemWidth + 16)) -
+        (screenWidth / 2) +
+        (itemWidth / 2);
+
+    position = position.clamp(0.0, scrollController.position.maxScrollExtent);
+
+    scrollController.animateTo(
+      position,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOut,
+    );
   }
 
   Future<void> _loadServices() async {

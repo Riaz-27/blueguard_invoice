@@ -5,9 +5,11 @@ class TaxChip extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
+  final GlobalKey? itemKey;
 
   const TaxChip({
     super.key,
+    required this.itemKey,
     required this.label,
     required this.selected,
     required this.onTap,
@@ -24,6 +26,9 @@ class TaxChip extends StatelessWidget {
       borderRadius: BorderRadius.circular(50.r),
       onTap: onTap,
       child: Container(
+        key: itemKey,
+        height: 35.h,
+        margin: EdgeInsets.only(right: 10.w),
         padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
         decoration: BoxDecoration(
           color: bgColor,

@@ -42,15 +42,16 @@ flutter:
     - assets/terms.jpg
     - assets/icon.png
     - assets/logo.png
+    - assets/splash.png
 
 flutter_native_splash:
   android: true
   ios: true
 
   color: "#ffffff"
-  image: assets/icon.png
+  image: assets/splash.png
 
   #! ANDROID 12+ configuration:
   android_12:
     color: "#ffffff"
-    image: assets/icon.png
+    image: assets/splash.png

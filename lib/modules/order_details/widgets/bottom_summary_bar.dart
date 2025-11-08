@@ -19,6 +19,9 @@ class BottomSummaryBar extends StatelessWidget {
 
   final String primaryLabel;
 
+  final GlobalKey itemKey;
+  final ScrollController scrollController;
+
   const BottomSummaryBar({
     super.key,
     required this.taxSlabs,
@@ -30,6 +33,8 @@ class BottomSummaryBar extends StatelessWidget {
     required this.total,
     required this.onNext,
     required this.isLoading,
+    required this.itemKey,
+    required this.scrollController,
     this.primaryLabel = "Generate Invoice",
   });
 
@@ -89,19 +94,25 @@ class BottomSummaryBar extends StatelessWidget {
                       ],
                     ),
                   )
-                : Wrap(
-                    spacing: 10.w,
-                    runSpacing: 10.h,
-                    children: taxSlabs.map((code) {
-                      final isSelected = selectedTaxSlab == code;
-                      return TaxChip(
-                        label: code,
-                        selected: isSelected,
-                        onTap: () => onSelectTaxSlab(code),
-                      );
-                    }).toList(),
+                : SizedBox(
+                    height: 35.h,
+                    child: ListView.builder(
+                      controller: scrollController,
+                      scrollDirection: Axis.horizontal,
+                      shrinkWrap: true,
+                      itemCount: taxSlabs.length,
+                      itemBuilder: (context, index) {
+                        final taxSlab = taxSlabs[index];
+                        final isSelected = selectedTaxSlab == taxSlab;
+                        return TaxChip(
+                          itemKey: isSelected ? itemKey : null,
+                          label: taxSlab,
+                          selected: isSelected,
+                          onTap: () => onSelectTaxSlab(taxSlab),
+                        );
+                      },
+                    ),
                   ),
-
             16.h.verticalSpace,
 
             // Subtotal / tax / total

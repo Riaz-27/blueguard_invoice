@@ -41,6 +41,8 @@ class OrderDetailsView extends GetView<OrderDetailsController> {
         final total = controller.totalAfterTax;
 
         return BottomSummaryBar(
+          itemKey: controller.itemKey,
+          scrollController: controller.scrollController,
           taxSlabs: controller.taxRates.keys.toList(),
           selectedTaxSlab: controller.selectedTaxSlab.value,
           onSelectTaxSlab: controller.selectTaxSlab,
