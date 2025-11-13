@@ -30,6 +30,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_launcher_icons: ^0.14.1
 
   flutter_lints: ^5.0.0
 
@@ -38,11 +39,7 @@ flutter:
 
   assets:
     - .env
-    - assets/logo.webp
-    - assets/terms.jpg
-    - assets/icon.png
-    - assets/logo.png
-    - assets/splash.png
+    - assets/
 
 flutter_native_splash:
   android: true
@@ -55,3 +52,9 @@ flutter_native_splash:
   android_12:
     color: "#ffffff"
     image: assets/splash.png
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/blueguard_logo.png"
+  remove_alpha_ios: true

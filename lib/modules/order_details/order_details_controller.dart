@@ -295,7 +295,7 @@ class OrderDetailsController extends GetxController {
       final fullPageData = await rootBundle.load('assets/terms.jpg');
       final fullPageImageBytes = fullPageData.buffer.asUint8List();
 
-      final logoData = await rootBundle.load('assets/logo.webp');
+      final logoData = await rootBundle.load('assets/logo.png');
       final logoBytes = logoData.buffer.asUint8List();
 
       //Generate PDF

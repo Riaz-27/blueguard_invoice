@@ -62,7 +62,6 @@ class HomeController extends GetxController {
     isLocating.value = true;
 
     try {
-      // 1. Check GPS service enabled
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         Get.snackbar(
