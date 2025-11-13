@@ -105,11 +105,13 @@ class HomeView extends GetView<HomeController> {
                           _FieldLabel("Contact Number"),
                           CustomFormField(
                             controller: controller.contactCtrl,
-                            hintText: "Enter contact number (optional)",
+                            hintText: "Enter contact number",
                             keyboardType: TextInputType.phone,
                             validator: (v) {
                               final val = (v ?? '').trim();
-                              if (val.isEmpty) return null;
+                              if (val.isEmpty) {
+                                return 'Phone number is required';
+                              }
                               final digits = val.replaceAll(RegExp(r'\D'), '');
                               if (digits.length < 7) {
                                 return 'Enter a valid phone';

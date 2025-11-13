@@ -28,6 +28,7 @@ class InvoicePdfService {
     required String nextServiceDate,
     required Uint8List? fullPageImageBytes,
     required Uint8List? logoBytes,
+    required String paymentMethod,
   }) async {
     final pdf = pw.Document();
 
@@ -52,6 +53,7 @@ class InvoicePdfService {
             remarks: remarks,
             nextServiceDate: nextServiceDate,
             logoBytes: logoBytes,
+            paymentMethod: paymentMethod,
           );
         },
       ),
@@ -100,6 +102,7 @@ class InvoicePdfService {
     required String remarks,
     required String nextServiceDate,
     required Uint8List? logoBytes,
+    required String paymentMethod,
   }) {
     final borderColor = PdfColor.fromInt(0xFFBFC4CA); // light gray border
     final headerBg = PdfColor.fromInt(0xFFEFF2F5); // light gray row bg
@@ -442,6 +445,20 @@ class InvoicePdfService {
             cell(
               "\$${total.toStringAsFixed(2)}",
               alignment: pw.Alignment.centerRight,
+              style: tableTextStyle,
+            ),
+          ],
+        ),
+        pw.TableRow(
+          children: [
+            cell(
+              "Payment Method",
+              style: boldTableTextStyle,
+              alignment: pw.Alignment.center,
+            ),
+            cell(
+              paymentMethod,
+              alignment: pw.Alignment.centerLeft,
               style: tableTextStyle,
             ),
           ],

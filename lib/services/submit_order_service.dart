@@ -33,6 +33,10 @@ class SubmitOrderService {
     required double totalPrice,
     required String nextServiceDate,
     required String comments,
+    required String taxNo,
+    required String paymentMethod,
+    String unit = '',
+    String type = 'order',
   }) async {
     if (_base.isEmpty) {
       throw StateError('Server URL is empty');
@@ -40,24 +44,35 @@ class SubmitOrderService {
 
     final uri = Uri.parse('$_base/submit_order.php');
 
-    final taxSlabStr = "${(taxPercent * 100).toStringAsFixed(2)}%";
+    // "15%" style label (no trailing .00 when whole)
+    String _percentLabel(double p) {
+      final v = p * 100.0;
+      final isWhole = v.truncateToDouble() == v;
+      return isWhole ? '${v.toStringAsFixed(0)}%' : '${v.toStringAsFixed(2)}%';
+    }
+
+    final taxSlabStr = _percentLabel(taxPercent);
 
     // services array
-    final serviceList = services.map((s) {
-      return {"name": s.name, "price": s.price, "qty": s.qty};
-    }).toList();
+    final serviceList = services
+        .map((s) => {"name": s.name, "price": s.price, "qty": s.qty})
+        .toList();
 
     final bodyMap = {
+      "type": type,
       "firstName": customer.firstName,
       "lastName": customer.lastName,
       "address": customer.street,
       "city": customer.city,
+      "unit": unit, // pass '' if you don't collect it yet
       "province": customer.province,
       "postalCode": customer.postalCode,
       "contactNumber": customer.phone,
       "email": customer.email,
       "taxSlab": taxSlabStr,
-      "totalPrice": totalPrice, // number
+      "tax_no": taxNo,
+      "totalPrice": totalPrice,
+      "payment_method": paymentMethod,
       "nextServiceDate": nextServiceDate,
       "comments": comments,
       "services": serviceList,

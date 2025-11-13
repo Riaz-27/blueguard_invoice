@@ -160,6 +160,60 @@ class OrderDetailsView extends GetView<OrderDetailsController> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Obx(
+                          () => LabeledFieldBlock(
+                            label: "Payment Method",
+                            child: DropdownButtonFormField<String>(
+                              value: controller.paymentMethod.value,
+                              items: controller.paymentOptions
+                                  .map(
+                                    (opt) => DropdownMenuItem(
+                                      value: opt,
+                                      child: Text(
+                                        opt,
+                                        style: TextStyle(
+                                          fontSize: 14.sp,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: controller.onPaymentChange,
+                              isExpanded: true,
+                              decoration: InputDecoration(
+                                isDense: true,
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12.w,
+                                  vertical: 12.h,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(14.r),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey.shade300,
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(14.r),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey.shade300,
+                                  ),
+                                ),
+                                focusedBorder: const OutlineInputBorder(
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(14),
+                                  ),
+                                  borderSide: BorderSide(
+                                    color: Color(0xFF2F7D61),
+                                    width: 1.2,
+                                  ),
+                                ),
+                                hintText: "Select a method",
+                              ),
+                            ),
+                          ),
+                        ),
+                        20.h.verticalSpace,
                         // Date
                         LabeledFieldBlock(
                           label: "Next Service Date",

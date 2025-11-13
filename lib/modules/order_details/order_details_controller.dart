@@ -184,6 +184,19 @@ class OrderDetailsController extends GetxController {
     }
   }
 
+  // Payment method state
+  final RxString paymentMethod = 'Cash'.obs;
+  final List<String> paymentOptions = const [
+    'Cash',
+    'Mastercard',
+    'Visa',
+    'Debit Card',
+  ];
+
+  void onPaymentChange(String? v) {
+    if (v != null && v.isNotEmpty) paymentMethod.value = v;
+  }
+
   // ----------------- Mutations -----------------
   void addService({
     required String name,
@@ -278,6 +291,10 @@ class OrderDetailsController extends GetxController {
         totalPrice: totalAfterTax,
         nextServiceDate: nextServiceDateCtrl.text.trim(),
         comments: commentCtrl.text.trim(),
+        taxNo: selectedTaxNo,
+        paymentMethod: paymentMethod.value,
+        unit: '',
+        type: 'order',
       );
 
       if (!apiResult.success) {
@@ -316,6 +333,7 @@ class OrderDetailsController extends GetxController {
         nextServiceDate: nextServiceDateCtrl.text.trim(),
         fullPageImageBytes: fullPageImageBytes,
         logoBytes: logoBytes,
+        paymentMethod: paymentMethod.value,
       );
 
       Get.find<HomeController>().reinitializeController();
