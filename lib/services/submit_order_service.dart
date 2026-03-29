@@ -64,7 +64,7 @@ class SubmitOrderService {
       "lastName": customer.lastName,
       "address": customer.street,
       "city": customer.city,
-      "unit": unit, // pass '' if you don't collect it yet
+      "unit": unit,
       "province": customer.province,
       "postalCode": customer.postalCode,
       "contactNumber": customer.phone,
